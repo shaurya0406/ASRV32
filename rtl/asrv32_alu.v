@@ -18,7 +18,9 @@ module asrv32_alu
     )
 
     /* Intermediate Register Declaration: */
-    reg[31:0] y_d;
+    reg[31:0] y_d;  // Store ALU Result
+    reg[31:0] a;    // Store Operand 1
+    reg[31:0] b;    // Store Operand 2
 
     /* Internal Parallel Wires for less resource utilisation */
     wire alu_add = i_alu[`ADD];
@@ -36,29 +38,31 @@ module asrv32_alu
     wire alu_ge = i_alu[`GE];
     wire alu_geu = i_alu[`GEU];
 
-    /* ALU Core Logic: */
+    /* ALU Core Combinational Logic (Blocking Code): */
     always @* begin  
-        y_d = 0;                            // Default value of intermediate register y_d
+        y_d = 0;                        // Default value of intermediate register y_d
+        a = i_op1;
+        b = i_op2;
 
-        if(alu_add) y_d = i_op1 + i_op2;    // Addition
-        if(alu_sub) y_d = i_op1 - i_op2;    // Subtraction
-        if(alu_slt || alu_sltu) begin       // Set if less than
-            y_d = i_op1 < i_op2;            // Less than comparison
-            if(alu_slt) y_d = (i_op1[31] ^ i_op2[31])? i_op1[31]:y_d;   // Consider sign bit for signed comparison
+        if(alu_add) y_d = a + b;        // Addition
+        if(alu_sub) y_d = a - b;        // Subtraction
+        if(alu_slt || alu_sltu) begin   // Set if less than
+            y_d = a < b;                // Less than comparison
+            if(alu_slt) y_d = (a[31] ^ b[31])? a[31]:y_d;   // Consider sign bit for signed comparison
         end 
-        if(alu_xor) y_d = i_op1 ^ i_op2;        // Bitwise XOR
-        if(alu_or)  y_d = i_op1 | i_op2;        // Bitwise OR
-        if(alu_and) y_d = i_op1 & i_op2;        // Bitwise AND
-        if(alu_sll) y_d = i_op1 << i_op2[4:0];  // Shift left logical
-        if(alu_srl) y_d = i_op1 >> i_op2[4:0];  // Shift right logical
-        if(alu_sra) y_d = i_op1 >>> i_op2[4:0]; // Shift right arithmetic
-        if(alu_eq || alu_neq) begin             // Equality check
-            y_d = i_op1 == i_op2;               // Check if equal
-            if(alu_neq) y_d = !y_d;             // Invert result for not equal
+        if(alu_xor) y_d = a ^ b;        // Bitwise XOR
+        if(alu_or)  y_d = a | b;        // Bitwise OR
+        if(alu_and) y_d = a & b;        // Bitwise AND
+        if(alu_sll) y_d = a << b[4:0];  // Shift left logical
+        if(alu_srl) y_d = a >> b[4:0];  // Shift right logical
+        if(alu_sra) y_d = a >>> b[4:0]; // Shift right arithmetic
+        if(alu_eq || alu_neq) begin     // Equality check
+            y_d = a == b;               // Check if equal
+            if(alu_neq) y_d = !y_d;     // Invert result for not equal
         end
-        if(alu_ge || alu_geu) begin             // Greater than or equal check
-            y_d = i_op1 >= i_op2;               // Check if greater than or equal
-            if(alu_ge) y_d = (i_op1[31] ^ i_op1[31])? i_op2[31]:y_d;    // Consider sign bit for signed comparison
+        if(alu_ge || alu_geu) begin     // Greater than or equal check
+            y_d = a >= b;               // Check if greater than or equal
+            if(alu_ge) y_d = (a[31] ^ a[31])? b[31]:y_d;    // Consider sign bit for signed comparison
         end
     end
 
