@@ -3,3 +3,6 @@
 
 # Ignore all Verilog Dump Files 
 *.vcd
+
+# Ignore Github DS Store Files created on Mac
+*.DS_Store
