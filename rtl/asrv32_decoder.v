@@ -7,21 +7,25 @@
 module asrv32_decoder
     (
         /* Inputs */
+        input wire i_clk, i_rst_n,      // Added clock and reset to register the outputs
         input wire[31:0] i_inst,        // The 32-bit instruction to be decoded.
         
         /* Outputs */
-        output wire[4:0] o_rs1_addr,    // Address for register source 1.
+        // o_rs1_addr and o_rs2_addr are already registered in the basereg module, hence wire datatype here in decoder definition
+        output wire[4:0] o_rs1_addr,    // Address for register source 1. 
         output wire[4:0] o_rs2_addr,    // Address for register source 2.
+        // Leaving o_rd_addr as is for now..
         output wire[4:0] o_rd_addr,     // Address for the destination register.
+        // Need to hold value for later decoding, hence changed from wire to reg type
         output reg[31:0] o_imm,         // The sign-extended immediate value extracted from the instruction.
-        output wire[2:0] o_funct3,      // Function type (3-bit field from the instruction).
-        output wire[`OPCODE_WIDTH-1:0] o_opcode, // Opcode type of the instruction.
-        output wire[3:0] o_alu_op,      // ALU operation type.
+        output reg[2:0] o_funct3,       // Function type (3-bit field from the instruction). 
+        output reg[`OPCODE_WIDTH-1:0] o_opcode, // Opcode type of the instruction.
+        output reg[`ALU_WIDTH-1:0] o_alu_op,    // ALU operation type.
 
     );
 
 /* Internal Signals and Registers to hold input values for decoding */
-
+`
 /*
 Functionality Outline:
 
