@@ -22,7 +22,7 @@ module asrv32_basereg
         
         /* Oputputs */
         input wire[31:0] o_rs1_data,    // Data read from the first source register.
-        input wire[31:0] o_rs2_data,    // Data read from the second source register.
+        input wire[31:0] o_rs2_data    // Data read from the second source register.
     );
 
     /* Internal Signals, Registers and Base Register File Declaration */ 
