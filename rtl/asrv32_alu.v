@@ -15,7 +15,7 @@ module asrv32_alu
 
         /* Outputs */
         output reg[31:0] o_alu_result       // Result of arithmetic operation by ALU
-    )
+    );
 
     /* Intermediate Register Declaration: */
     reg[31:0] y_d;  // Store ALU Result
@@ -68,7 +68,7 @@ module asrv32_alu
 
     /* Register the ALU Output */
     always @(posedge i_clk, negedge i_rst_n) begin
-        if(!rst_n) o_alu_result <= 0;                           // Reset output to 0 when reset is active (deasserted)
+        if(!i_rst_n) o_alu_result <= 0;                           // Reset output to 0 when reset is active (deasserted)
         else o_alu_result <= i_alu_en ? y_d : o_alu_result;     // Update ALU output if ALU stage (Execute stage) is active, else previous result i.e. keep it constant
     end 
 
