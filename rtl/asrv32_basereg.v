@@ -42,9 +42,9 @@ module asrv32_basereg
     end
 
     /* Combinational Logic for Control Signals using concurrent assignment*/
-    assign reg_wr_en = (i_ce_wr && i_rd_addr != 0) // This signal is asserted if i_ce_wr is asserted and the destination address i_rd_addr is not zero (since register x0 is hardwired to zero).
+    assign reg_wr_en = (i_ce_wr && i_rd_addr != 0); // This signal is asserted if i_ce_wr is asserted and the destination address i_rd_addr is not zero (since register x0 is hardwired to zero).
     assign o_rs1_data = (rs1_addr_q == 0) ? 0 : base_reg_file[rs1_addr_q];
-    assign o_rs2_data = (rs2_addr_q == 0) ? 0 : base_reg_file[rs2_addr_q];``   
+    assign o_rs2_data = (rs2_addr_q == 0) ? 0 : base_reg_file[rs2_addr_q];
 endmodule
 
     
