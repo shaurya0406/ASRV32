@@ -20,9 +20,9 @@ module asrv32_basereg
         input wire[4:0] i_rd_addr,  // Address of the destination register.
         input wire[31:0] i_rd_data, // Data to be written to the destination register.
         
-        /* Oputputs */
+        /* Outputs */
         input wire[31:0] o_rs1_data,    // Data read from the first source register.
-        input wire[31:0] o_rs2_data    // Data read from the second source register.
+        input wire[31:0] o_rs2_data     // Data read from the second source register.
     );
 
     /* Internal Signals, Registers and Base Register File Declaration */ 
