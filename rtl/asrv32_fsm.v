@@ -21,7 +21,7 @@ module rv32i_fsm (
     output reg[31:0] o_op1,                 // ALU operand 1 output
     output reg[31:0] o_op2,                 // ALU operand 2 output
     output wire o_alu_stage_en,             // ALU stage enable signal
-    output wire memoryaccess_stage_en,      // Memory access stage enable signal
+    output wire o_memoryaccess_stage_en,      // Memory access stage enable signal
     output wire o_writeback_stage_en        // Writeback stage enable signal
 );
 
@@ -97,7 +97,7 @@ module rv32i_fsm (
 
     /* Stage Enable Signals */
     assign o_alu_stage_en = o_stage_q == EXECUTE;               // ALU stage enable
-    assign memoryaccess_stage_en = o_stage_q == MEMORYACCESS;   // Memory access stage enable
+    assign o_memoryaccess_stage_en = o_stage_q == MEMORYACCESS;   // Memory access stage enable
     assign o_writeback_stage_en = o_stage_q == WRITEBACK;       // Writeback stage enable
     
 endmodule
