@@ -23,17 +23,17 @@ module asrv32_writeback #(parameter PC_RESET = 32'h00_00_00_00) (
     initial o_pc = PC_RESET;                    // Initialize PC to PC_RESET
 
     /* Internal Wires for decoding opcode signals. */
-    wire opcode_rtype  = i_opcode[`OPCODE_RTYPE];
-    wire opcode_itype  = i_opcode[`OPCODE_ITYPE];
-    wire opcode_load   = i_opcode[`OPCODE_LOAD];
-    wire opcode_store  = i_opcode[`OPCODE_STORE];
-    wire opcode_branch = i_opcode[`OPCODE_BRANCH];
-    wire opcode_jal    = i_opcode[`OPCODE_JAL];
-    wire opcode_jalr   = i_opcode[`OPCODE_JALR];
-    wire opcode_lui    = i_opcode[`OPCODE_LUI];
-    wire opcode_auipc  = i_opcode[`OPCODE_AUIPC];
-    wire opcode_system = i_opcode[`OPCODE_SYSTEM];
-    wire opcode_fence  = i_opcode[`OPCODE_FENCE];
+    wire opcode_rtype = i_opcode[`RTYPE];
+    wire opcode_itype = i_opcode[`ITYPE];
+    wire opcode_load = i_opcode[`LOAD];
+    wire opcode_store = i_opcode[`STORE];
+    wire opcode_branch = i_opcode[`BRANCH];
+    wire opcode_jal = i_opcode[`JAL];
+    wire opcode_jalr = i_opcode[`JALR];
+    wire opcode_lui = i_opcode[`LUI];
+    wire opcode_auipc = i_opcode[`AUIPC];
+    wire opcode_system = i_opcode[`SYSTEM];
+    wire opcode_fence = i_opcode[`FENCE];
 
     /* Intermediate Registers */
     reg[31:0] rd_d;     // Intermediate register for destination register data
