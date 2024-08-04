@@ -62,7 +62,7 @@ module asrv32_decoder
 - These addresses are used to read the values from the register file in the next stage.
 */
 
-    //o_rs1_addr and o_rs2_addr are not registered since rv32i_basereg module do the registering itself
+    //o_rs1_addr and o_rs2_addr are not registered since asrv32_basereg module do the registering itself
     assign o_rs1_addr = i_inst[19:15]; 
     assign o_rs2_addr = i_inst[24:20];  
     assign o_rd_addr = i_inst[11:7];

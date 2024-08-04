@@ -19,7 +19,7 @@ module asrv32_soc #(parameter PC_RESET=32'h00_00_00_00, ROM_DEPTH=1024, RAM_DEPT
     wire[3:0] wr_mask; //write mask control
     wire wr_en; //write enable 
         
-    asrv32_core #(.PC_RESET(32'h00_00_00_00)) m0( //main RV32I core
+    asrv32_core #(.PC_RESET(32'h00_00_00_00)) m0( //main ASRV32 core
         .i_clk(clk),
         .i_rst_n(rst_n),
         //Instruction Memory Interface
