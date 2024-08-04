@@ -4,7 +4,7 @@
 `include "asrv32_header.vh"
 
 /* MemAccess Module & Ports Declaration*/
-module rv32i_memoryaccess(
+module asrv32_memoryaccess(
     /* Inputs */
     input wire i_clk,                       // Clock signal
     input wire i_rst_n,                     // Active-low reset signal

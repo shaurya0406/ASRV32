@@ -4,7 +4,7 @@
 `include "asrv32_header.vh"
 
 /* FSM Module & Ports Declaration */
-module rv32i_fsm (
+module asrv32_fsm (
     /* Inputs */
     input wire i_clk,                       // Clock input
     input wire i_rst_n,                     // Active-low reset input

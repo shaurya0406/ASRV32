@@ -4,7 +4,7 @@
 `include "asrv32_header.vh"
 
 /* Writeback Module & Ports Declaration*/
-module rv32i_writeback #(parameter PC_RESET = 32'h00_00_00_00) (
+module asrv32_writeback #(parameter PC_RESET = 32'h00_00_00_00) (
     
     /* Inputs */
     input wire i_clk, i_rst_n,
