@@ -5,6 +5,8 @@
 
 /* Writeback Module & Ports Declaration*/
 module rv32i_writeback #(parameter PC_RESET = 32'h00_00_00_00) (
+    
+    /* Inputs */
     input wire i_clk, i_rst_n,
     input wire i_writeback_en,                  // Enable o_wr_rd_en if stage is currently on WRITEBACK Stage
     input wire[31:0] i_result_from_alu,         // Output of ALU
@@ -12,6 +14,8 @@ module rv32i_writeback #(parameter PC_RESET = 32'h00_00_00_00) (
     input wire[31:0] i_rs1_data,                // Source register 1 value
     input wire[31:0] i_load_data_from_memory,   // Data to be loaded to base register
     input wire[`OPCODE_WIDTH-1:0] i_opcode,     // Opcode
+
+    /* Outputs */
     output reg[31:0] o_rd,                      // Value to be written back to destination register
     output reg[31:0] o_pc,                      // New PC value
     output reg o_wr_rd_en                       // Write o_rd to the base register if enabled
