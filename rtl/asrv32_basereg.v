@@ -26,14 +26,14 @@ module asrv32_basereg
     );
 
     /* Internal Signals, Registers and Base Register File Declaration */ 
-    reg[4:0] rs1_addr_q, rs2_addr_q;    // Registers to hold the addresses of the source registers.
-    reg[31:0] base_reg_file [31:1];     // 2D Array representing the base register file, where base_regfile[0] is hardwired to zero (it is not declared explicitly in the array because it is not used).
+    reg[4:0] rs1_addr_q =0, rs2_addr_q = 0;    // Registers to hold the addresses of the source registers.
+    reg[31:0] base_regfile [31:1];     // 2D Array representing the base register file, where base_regfile[0] is hardwired to zero (it is not declared explicitly in the array because it is not used).
     wire reg_wr_en;
     
     /* Sequential Logic for Read and Write Operations */ 
     always @(posedge i_clk) begin // On the positive edge of the clock
         if(reg_wr_en) begin // if 'reg_wr_en' signal is asserted, write the data 'i_rd_data' to the register addressed by 'i_rd_addr' (synchronous write).
-            base_reg_file[i_rd_addr] <= i_rd_data;
+            base_regfile[i_rd_addr] <= i_rd_data;
         end
         if(i_ce_rd) begin // If i_ce_read is high, capture the addresses of the source registers into rs1_addr_q and rs2_addr_q (synchronous read).
             rs1_addr_q <= i_rs1_addr; 
@@ -43,8 +43,8 @@ module asrv32_basereg
 
     /* Combinational Logic for Control Signals using concurrent assignment*/
     assign reg_wr_en = (i_ce_wr && i_rd_addr != 0); // This signal is asserted if i_ce_wr is asserted and the destination address i_rd_addr is not zero (since register x0 is hardwired to zero).
-    assign o_rs1_data = (rs1_addr_q == 0) ? 0 : base_reg_file[rs1_addr_q];
-    assign o_rs2_data = (rs2_addr_q == 0) ? 0 : base_reg_file[rs2_addr_q];
+    assign o_rs1_data = (rs1_addr_q == 0) ? 0 : base_regfile[rs1_addr_q];
+    assign o_rs2_data = (rs2_addr_q == 0) ? 0 : base_regfile[rs2_addr_q];
 endmodule
 
     
