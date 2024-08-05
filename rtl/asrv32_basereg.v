@@ -30,6 +30,11 @@ module asrv32_basereg
     reg[31:0] base_regfile [31:1];     // 2D Array representing the base register file, where base_regfile[0] is hardwired to zero (it is not declared explicitly in the array because it is not used).
     wire reg_wr_en;
     
+    /* Initialise Base Regfile to 0 for Testbench (not synthesizable) */
+    initial begin
+        for(i=0 ; i<32 ; i=i+1) base_regfile[i]=0; 
+    end
+
     /* Sequential Logic for Read and Write Operations */ 
     always @(posedge i_clk) begin // On the positive edge of the clock
         if(reg_wr_en) begin // if 'reg_wr_en' signal is asserted, write the data 'i_rd_data' to the register addressed by 'i_rd_addr' (synchronous write).
