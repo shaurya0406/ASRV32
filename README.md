@@ -16,6 +16,7 @@ RISCV Processor in Verilog HDL. (Currently FSM based.)
 ## TODO
 
 :white_check_mark: FSM based Core and SoC Integration
+
 :black_square_button: Add more testcases for the testbench    
 :black_square_button: Automate the testbench   
 :black_square_button: Add CSR Module to support FreeRTOS  
