@@ -39,9 +39,12 @@ module asrv32_writeback #(parameter PC_RESET = 32'h00_00_00_00) (
     reg[31:0] rd_d;     // Intermediate register for destination register data
     reg[31:0] pc_d;     // Intermediate register for PC
     reg wr_rd_d;        // Intermediate register for write enable signal
-    reg[31:0] a, sum;   // Intermediate registers for calculations
+    reg[31:0] a;        // Intermediate registers for PC calculations
+    wire[31:0] sum;     // Intermediate Signal for ALU calculations 
 
     /* Combinational Logic for Writeback Stage */
+
+    assign sum = a + i_imm; // Share adder for all addition operation for less resource utilization (Non Blocking Combinational Logic)   
 
     //determine next value of PC and Rd
     always @* begin
@@ -49,7 +52,6 @@ module asrv32_writeback #(parameter PC_RESET = 32'h00_00_00_00) (
         pc_d = o_pc + 32'd4; // Default PC increment
         wr_rd_d = 0;
         a = o_pc;
-        sum = 0;
         
         // Set rd_d based on instruction type
         if(opcode_rtype || opcode_itype) rd_d = i_result_from_alu;
@@ -79,8 +81,6 @@ module asrv32_writeback #(parameter PC_RESET = 32'h00_00_00_00) (
         // Disable write for certain instruction types
         if (opcode_branch || opcode_store || opcode_system) wr_rd_d = 0;
         else wr_rd_d = 1; // Enable write for other instruction types except when instruction is BRANCH/STORE/SYSTEM
-        
-        sum = a + i_imm; // Share adder for all addition operation for less resource utilization   
         
     end
 
