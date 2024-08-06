@@ -12,7 +12,7 @@ module asrv32_core #(parameter PC_RESET = 32'h00_00_00_00) (
     /* Instruction Memory Interface (32 bit rom) */
     input wire[31:0] i_inst, //32-bit instruction
 
-    output wire[31:0] i_inst_addr, //address of instruction 
+    output wire[31:0] o_inst_addr, //address of instruction 
 
     /* Data Memory Interface (32 bit ram) */
     input wire[31:0] i_data_from_memory, //data retrieve from memory
@@ -51,7 +51,7 @@ module asrv32_core #(parameter PC_RESET = 32'h00_00_00_00) (
     wire writeback_stage_en; 
     
     //address of memories 
-    assign i_inst_addr = pc; //instruction address
+    assign o_inst_addr = pc; //instruction address
     assign o_store_data_addr = alu_result; //data address
   
     //module instantiations (all outputs are registered)
