@@ -55,7 +55,7 @@ module asrv32_alu
         if(alu_and) y_d = a & b;        // Bitwise AND
         if(alu_sll) y_d = a << b[4:0];  // Shift left logical
         if(alu_srl) y_d = a >> b[4:0];  // Shift right logical
-        if(alu_sra) y_d = a >>> b[4:0]; // Shift right arithmetic
+        if(alu_sra) y_d = $signed(a) >>> b[4:0]; // Shift right arithmetic
         if(alu_eq || alu_neq) begin     // Equality check
             y_d = a == b;               // Check if equal
             if(alu_neq) y_d = !y_d;     // Invert result for not equal
