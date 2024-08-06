@@ -19,8 +19,7 @@ module asrv32_soc_TB;
     /*********************** initialize instruction memory and data memory **************************/
     initial begin  
         #1; 
-        // $readmemh("test/SoC_TB/combined_inst_data.mem",uut.m1.memory_regfile); //write instruction and data to memory
-        $readmemh("add3.mem",uut.m1.memory_regfile); //write instruction and data to memory
+        $readmemh("test/SoC_TB/combined_inst_data.mem",uut.m1.memory_regfile); //write instruction and data to memory
     end
     /***********************************************************************************************/
 
