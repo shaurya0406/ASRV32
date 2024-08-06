@@ -62,6 +62,16 @@ module asrv32_soc_TB;
             $display("0x%0h: 0x%h",i,uut.m1.memory_regfile[i>>2]);
         end
         /**********************************************************/
+
+        if(uut.m0.m0.base_regfile[17] == 32'h5d) begin //Exit test using RISC-V International's riscv-tests pass/fail criteria
+                if(uut.m0.m0.base_regfile[10] == 0)
+                    $display("\nPASS: exit code = 0x%h\n",uut.m0.m0.base_regfile[10]>>1);
+                else begin
+                    $display("\nFAIL: exit code = 0x%h\n",uut.m0.m0.base_regfile[10]>>1);
+                end
+            end
+            else $display("\nUNKNOWN: basereg[17] = 0x%h (must be 0x0000005d)",uut.m0.m0.base_regfile[17]);
+            
         $stop;
     end
 endmodule
