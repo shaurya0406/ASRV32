@@ -26,7 +26,7 @@ module asrv32_soc #(parameter PC_RESET=32'h00_00_00_00, MEMORY_DEPTH=1024) (
         .i_rst_n(rst_n), // Active low reset
         // Instruction Memory Interface
         .i_inst(inst), // 32-bit instruction
-        .i_inst_addr(iaddr), // Address of instruction 
+        .o_inst_addr(iaddr), // Address of instruction 
         // Data Memory Interface
         .i_data_from_memory(din), // Data retrieved from memory
         .o_store_data(dout), // Data to be stored to memory
@@ -37,16 +37,16 @@ module asrv32_soc #(parameter PC_RESET=32'h00_00_00_00, MEMORY_DEPTH=1024) (
         
     // Main memory instantiation
     main_memory #(.MEMORY_DEPTH(MEMORY_DEPTH)) m1(
-        .clk(clk), // System clock
+        .i_clk(clk), // System clock
         // Instruction Memory Interface
-        .inst_addr(iaddr[$clog2(MEMORY_DEPTH)-1:0]), // Instruction address
-        .inst_out(inst), // Instruction output
+        .i_inst_addr(iaddr[$clog2(MEMORY_DEPTH)-1:0]), // Instruction address
+        .o_inst_out(inst), // Instruction output
         // Data Memory Interface
-        .data_addr(daddr[$clog2(MEMORY_DEPTH)-1:0]), // Data address
-        .data_in(dout), // Data input
-        .wr_mask(wr_mask), // Write mask
-        .wr_en(wr_en), // Write enable
-        .data_out(din) // Data output
+        .i_data_addr(daddr[$clog2(MEMORY_DEPTH)-1:0]), // Data address
+        .i_data_in(dout), // Data input
+        .i_wr_mask(wr_mask), // Write mask
+        .i_wr_en(wr_en), // Write enable
+        .o_data_out(din) // Data output
     );
 
 endmodule
@@ -54,16 +54,16 @@ endmodule
 
 // Main memory module with combined instruction and data memory
 module main_memory #(parameter MEMORY_DEPTH=1024) (
-    input wire clk, // System clock
+    input wire i_clk, // System clock
     // Instruction Memory Interface
-    input wire[$clog2(MEMORY_DEPTH)-1:0] inst_addr, // Instruction address
-    output wire[31:0] inst_out, // Instruction output
+    input wire[$clog2(MEMORY_DEPTH)-1:0] i_inst_addr, // Instruction address
+    output wire[31:0] o_inst_out, // Instruction output
     // Data Memory Interface
-    input wire[$clog2(MEMORY_DEPTH)-1:0] data_addr, // Data address
-    input wire[31:0] data_in, // Data input
-    input wire[3:0] wr_mask, // Write mask
-    input wire wr_en, // Write enable
-    output wire[31:0] data_out // Data output
+    input wire[$clog2(MEMORY_DEPTH)-1:0] i_data_addr, // Data address
+    input wire[31:0] i_data_in, // Data input
+    input wire[3:0] i_wr_mask, // Write mask
+    input wire i_wr_en, // Write enable
+    output wire[31:0] o_data_out // Data output
 );
     // Memory array for storing instructions and data
     reg[31:0] memory_regfile[MEMORY_DEPTH/4 - 1:0];
@@ -76,17 +76,17 @@ module main_memory #(parameter MEMORY_DEPTH=1024) (
     end
     
     // Read instruction from memory
-    assign inst_out = memory_regfile[{inst_addr >> 2}]; 
+    assign o_inst_out = memory_regfile[{i_inst_addr >> 2}]; 
     // Read data from memory
-    assign data_out = memory_regfile[data_addr[$clog2(MEMORY_DEPTH)-1:2]]; 
+    assign o_data_out = memory_regfile[i_data_addr[$clog2(MEMORY_DEPTH)-1:2]]; 
     
     // Write data to memory
-    always @(posedge clk) begin
-        if(wr_en) begin
-            if(wr_mask[0]) memory_regfile[data_addr[$clog2(MEMORY_DEPTH)-1:2]][7:0] <= data_in[7:0]; 
-            if(wr_mask[1]) memory_regfile[data_addr[$clog2(MEMORY_DEPTH)-1:2]][15:8] <= data_in[15:8];
-            if(wr_mask[2]) memory_regfile[data_addr[$clog2(MEMORY_DEPTH)-1:2]][23:16] <= data_in[23:16];
-            if(wr_mask[3]) memory_regfile[data_addr[$clog2(MEMORY_DEPTH)-1:2]][31:24] <= data_in[31:24];
+    always @(posedge i_clk) begin
+        if(i_wr_en) begin
+            if(i_wr_mask[0]) memory_regfile[i_data_addr[$clog2(MEMORY_DEPTH)-1:2]][7:0] <= i_data_in[7:0]; 
+            if(i_wr_mask[1]) memory_regfile[i_data_addr[$clog2(MEMORY_DEPTH)-1:2]][15:8] <= i_data_in[15:8];
+            if(i_wr_mask[2]) memory_regfile[i_data_addr[$clog2(MEMORY_DEPTH)-1:2]][23:16] <= i_data_in[23:16];
+            if(i_wr_mask[3]) memory_regfile[i_data_addr[$clog2(MEMORY_DEPTH)-1:2]][31:24] <= i_data_in[31:24];
         end        
     end
     
