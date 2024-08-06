@@ -40,14 +40,20 @@ module asrv32_memoryaccess(
            
         case (i_funct3[1:0]) 
             2'b00: begin // Byte load/store
-                    load_data_d = {{{24{!i_funct3[2]}} & {24{i_data_from_memory[7]}}}, i_data_from_memory[7:0]}; // Signed and unsigned extension
-                    wr_mask_d = 4'b0001 << addr_2; // Mask one of the 4 bytes
-                    store_data_d = i_rs2_data << {addr_2, 3'b000}; // Align data to mask
+
+                    case(addr_2)  //choose which of the 4 byte will be loaded to basereg
+                        2'b00: load_data_d = i_data_from_memory[7:0];
+                        2'b01: load_data_d = i_data_from_memory[15:8];
+                        2'b10: load_data_d = i_data_from_memory[23:16];
+                        2'b11: load_data_d = i_data_from_memory[31:24];
+                    endcase
+                    load_data_d = {{{24{!i_funct3[2]}} & {24{load_data_d[7]}}} , load_data_d[7:0]}; //signed and unsigned extension
                    end
             2'b01: begin // Half-word load/store
-                    load_data_d = {{{16{!i_funct3[2]}} & {16{i_data_from_memory[15]}}}, i_data_from_memory[15:0]}; // Signed and unsigned extension
+                    load_data_d = addr_2[1]? i_data_from_memory[31:16]: i_data_from_memory[15:0]; //choose which of the 2 halfwords will be loaded to basereg
+                    load_data_d = {{{16{!i_funct3[2]}} & {16{load_data_d[15]}}},load_data_d[15:0]}; //signed and unsigned extension
                     wr_mask_d = 4'b0011 << {addr_2[1], 1'b0}; // Mask upper or lower half-word
-                    store_data_d = i_rs2_data << {addr_2[1], 3'b0}; // Align data to mask
+                    store_data_d = i_rs2_data << {addr_2[1], 4'b0000}; // Align data to mask
                    end
             2'b10: begin // Word load/store
                     load_data_d = i_data_from_memory;
