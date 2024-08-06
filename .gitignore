@@ -1,5 +1,5 @@
 # Ignore all Icarus Verilog Simulation Output files
-*.out
+*.vvp
 
 # Ignore all Verilog Dump Files 
 *.vcd
