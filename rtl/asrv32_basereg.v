@@ -29,7 +29,7 @@ module asrv32_basereg
     reg[4:0] rs1_addr_q =0, rs2_addr_q = 0;    // Registers to hold the addresses of the source registers.
     reg[31:0] base_regfile [31:1];     // 2D Array representing the base register file, where base_regfile[0] is hardwired to zero (it is not declared explicitly in the array because it is not used).
     wire reg_wr_en;
-    integer i = 0;
+    reg[5:0] i = 0;
     
     /* Initialise Base Regfile to 0 for Testbench (not synthesizable) */
     initial begin
@@ -52,7 +52,3 @@ module asrv32_basereg
     assign o_rs1_data = (rs1_addr_q == 0) ? 0 : base_regfile[rs1_addr_q];
     assign o_rs2_data = (rs2_addr_q == 0) ? 0 : base_regfile[rs2_addr_q];
 endmodule
-
-    
-
-
