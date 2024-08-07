@@ -63,8 +63,8 @@ module asrv32_core #(parameter PC_RESET = 32'h00_00_00_00) (
         .i_rs2_addr(rs2_addr), //source register 2 address
         .i_rd_addr(rd_addr), //destination register address
         .i_rd_data(rd_data), //data to be written to destination register
-        .o_rs1_data(rs1_data), //source register 1 value (Compiler Warning: input port o_rs1_data is coerced to inout.)
-        .o_rs2_data(rs2_data) //source register 2 value (Compiler Warning: input port o_rs2_data is coerced to inout.)
+        .o_rs1_data(rs1_data), //source register 1 value 
+        .o_rs2_data(rs2_data) //source register 2 value 
     );
     
     asrv32_decoder m1( //logic for the decoding of the 32 bit instruction [DECODE STAGE]
