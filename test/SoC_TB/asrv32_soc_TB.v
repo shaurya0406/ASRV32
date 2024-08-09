@@ -3,8 +3,8 @@
 module asrv32_soc_TB;
 
     /******************************* MODIFY ****************************************/
-    localparam MEMORY_DEPTH = 2000,         //number of memory bytes
-               DATA_START_ADDR = 32'h1080;  //starting address of data memory to be displayed
+    localparam MEMORY_DEPTH = 8192,         //number of memory bytes
+               DATA_START_ADDR = 32'h1000;  //starting address of data memory to be displayed
     /*******************************************************************************/
                
     reg clk,rst_n;
@@ -19,7 +19,8 @@ module asrv32_soc_TB;
     /*********************** initialize instruction memory and data memory **************************/
     initial begin  
         #1; 
-        $readmemh("test/SoC_TB/combined_inst_data.mem",uut.m1.memory_regfile); //write instruction and data to memory
+        // $readmemh("test/SoC_TB/combined_inst_data.mem",uut.m1.memory_regfile); //write instruction and data to memory
+        $readmemh("/Users/shacha/ASRV32/memory.mem",uut.m1.memory_regfile); //write instruction and data to memory
     end
     /***********************************************************************************************/
 
