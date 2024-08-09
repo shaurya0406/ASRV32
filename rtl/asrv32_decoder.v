@@ -95,7 +95,7 @@ module asrv32_decoder
 
     // Decode operation for ALU
     always @* begin
-        imm_d = 0;
+        // imm_d = 0;
         alu_add_d = 0;
         alu_sub_d = 0;
         alu_slt_d = 0;
@@ -153,7 +153,7 @@ module asrv32_decoder
                                         `OPCODE_JAL: imm_d = {{11{i_inst[31]}},i_inst[31],i_inst[19:12],i_inst[20],i_inst[30:21],1'b0};
                         `OPCODE_LUI , `OPCODE_AUIPC: imm_d = {i_inst[31:12],12'h000};
                      `OPCODE_SYSTEM , `OPCODE_FENCE: imm_d = {20'b0,i_inst[31:20]};   
-                     default: imm_d = 0;
+                                            default: imm_d = 0;
         endcase
     end
 
