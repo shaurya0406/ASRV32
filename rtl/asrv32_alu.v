@@ -62,7 +62,7 @@ module asrv32_alu
         end
         if(alu_ge || alu_geu) begin     // Greater than or equal check
             y_d = a >= b;               // Check if greater than or equal
-            if(alu_ge) y_d = (a[31] ^ a[31])? b[31]:y_d;    // Consider sign bit for signed comparison
+            if(alu_ge) y_d = (a[31] ^ b[31])? b[31]:y_d;    // Consider sign bit for signed comparison
         end
     end
 
