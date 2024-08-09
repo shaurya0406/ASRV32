@@ -48,6 +48,8 @@ module asrv32_memoryaccess(
                         2'b11: load_data_d = i_data_from_memory[31:24];
                     endcase
                     load_data_d = {{{24{!i_funct3[2]}} & {24{load_data_d[7]}}} , load_data_d[7:0]}; //signed and unsigned extension
+                    wr_mask_d = 4'b0001<<addr_2; //mask 1 of the 4 bytes
+                    store_data_d = i_rs2_data<<{addr_2,3'b000}; //rs2<<(addr_2*8) , align data to mask
                    end
             2'b01: begin // Half-word load/store
                     load_data_d = addr_2[1]? i_data_from_memory[31:16]: i_data_from_memory[15:0]; //choose which of the 2 halfwords will be loaded to basereg
