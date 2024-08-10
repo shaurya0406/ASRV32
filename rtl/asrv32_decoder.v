@@ -21,7 +21,8 @@ module asrv32_decoder
         output reg[31:0] o_imm,         // The sign-extended immediate value extracted from the instruction.
         output reg[2:0] o_funct3,       // Function type (3-bit field from the instruction). 
         output reg[`OPCODE_WIDTH-1:0] o_opcode, // Opcode type of the instruction.
-        output reg[`ALU_WIDTH-1:0] o_alu_op    // ALU operation type.
+        output reg[`ALU_WIDTH-1:0] o_alu_op,    // ALU operation type.
+        output reg[`EXCEPTION_WIDTH-1:0] o_exception // Exceptions: illegal inst, ecall, ebreak, mret
 
     );
 
@@ -54,6 +55,10 @@ module asrv32_decoder
     reg alu_neq_d;
     reg alu_ge_d; 
     reg alu_geu_d;
+    /* Exceptions */
+    reg system_noncsr = 0;
+    reg valid_opcode = 0;
+    reg illegal_shift = 0;
 
 /* Functionality Outline: */
 
@@ -193,6 +198,11 @@ module asrv32_decoder
                 o_alu_op[`NEQ]  <= 0;
                 o_alu_op[`GE]   <= 0;
                 o_alu_op[`GEU]  <= 0;
+                /// Exceptions ///
+                o_exception[`ILLEGAL]   <= 0;
+                o_exception[`ECALL]     <= 0;
+                o_exception[`EBREAK]    <= 0;
+                o_exception[`MRET]      <= 0;
                 
             end
             else begin
@@ -238,6 +248,26 @@ module asrv32_decoder
                 o_alu_op[`NEQ]  <= alu_neq_d;
                 o_alu_op[`GE]   <= alu_ge_d; 
                 o_alu_op[`GEU]  <= alu_geu_d;
+
+                /*********************** Decode possible exceptions ***********************/
+                system_noncsr = opcode == `OPCODE_SYSTEM && funct3_d == 0 ; //system instruction but not CSR operation
+
+                // Check if instruction is illegal    
+                valid_opcode = (opcode_rtype_d || opcode_itype_d || opcode_load_d || opcode_store_d || opcode_branch_d || opcode_jal_d || opcode_jalr_d || opcode_lui_d || opcode_auipc_d || opcode_system_d || opcode_fence_d);
+                illegal_shift = (opcode_itype_d && (alu_sll_d || alu_srl_d || alu_sra_d)) && i_inst[25];
+
+                o_exception[`ILLEGAL] <= !valid_opcode || illegal_shift;
+
+                // Check if ECALL
+                o_exception[`ECALL] <= (system_noncsr && i_inst[21:20]==2'b00)? 1:0;
+                
+                // Check if EBREAK
+                o_exception[`EBREAK] <= (system_noncsr && i_inst[21:20]==2'b01)? 1:0;
+                
+                // Check if MRET
+                o_exception[`MRET] <= (system_noncsr && i_inst[21:20]==2'b10)? 1:0;
+                /***************************************************************************/
+
             end
         end
 endmodule
