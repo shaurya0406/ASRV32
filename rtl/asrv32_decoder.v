@@ -79,19 +79,19 @@ module asrv32_decoder
 */
 
     // Assign Opcodes
-    always @(*) begin
-        opcode_rtype_d  = opcode == `OPCODE_RTYPE;
-        opcode_itype_d  = opcode == `OPCODE_ITYPE;
-        opcode_load_d   = opcode == `OPCODE_LOAD;
-        opcode_store_d  = opcode == `OPCODE_STORE;
-        opcode_branch_d = opcode == `OPCODE_BRANCH;
-        opcode_jal_d    = opcode == `OPCODE_JAL;
-        opcode_jalr_d   = opcode == `OPCODE_JALR;
-        opcode_lui_d    = opcode == `OPCODE_LUI;
-        opcode_auipc_d  = opcode == `OPCODE_AUIPC;
-        opcode_system_d = opcode == `OPCODE_SYSTEM;
-        opcode_fence_d  = opcode == `OPCODE_FENCE;
-    end
+    // always @(*) begin
+    //     opcode_rtype_d  = opcode == `OPCODE_RTYPE;
+    //     opcode_itype_d  = opcode == `OPCODE_ITYPE;
+    //     opcode_load_d   = opcode == `OPCODE_LOAD;
+    //     opcode_store_d  = opcode == `OPCODE_STORE;
+    //     opcode_branch_d = opcode == `OPCODE_BRANCH;
+    //     opcode_jal_d    = opcode == `OPCODE_JAL;
+    //     opcode_jalr_d   = opcode == `OPCODE_JALR;
+    //     opcode_lui_d    = opcode == `OPCODE_LUI;
+    //     opcode_auipc_d  = opcode == `OPCODE_AUIPC;
+    //     opcode_system_d = opcode == `OPCODE_SYSTEM;
+    //     opcode_fence_d  = opcode == `OPCODE_FENCE;
+    // end
 
     // Decode operation for ALU
     always @* begin
@@ -114,8 +114,8 @@ module asrv32_decoder
         /********** Decode ALU Operation **************/
         if(opcode == `OPCODE_RTYPE || opcode == `OPCODE_ITYPE) begin
             if(opcode == `OPCODE_RTYPE) begin
-                alu_add_d = funct3_d == `FUNCT3_ADD ? !i_inst[30] : 0; //add and sub has same o_funct3 code
-                alu_sub_d = funct3_d == `FUNCT3_ADD ? i_inst[30] : 0;      //differs on i_inst[30]
+                alu_add_d = funct3_d == `FUNCT3_ADD ? !i_inst[30] : 0; // add and sub has same o_funct3 code
+                alu_sub_d = funct3_d == `FUNCT3_ADD ? i_inst[30] : 0;  // differs on i_inst[30]
             end
             else alu_add_d = funct3_d == `FUNCT3_ADD;
 
@@ -198,6 +198,19 @@ module asrv32_decoder
             else begin
                 o_funct3    <= funct3_d;
                 o_imm       <= imm_d;
+
+                opcode_rtype_d  = opcode == `OPCODE_RTYPE;
+                opcode_itype_d  = opcode == `OPCODE_ITYPE;
+                opcode_load_d   = opcode == `OPCODE_LOAD;
+                opcode_store_d  = opcode == `OPCODE_STORE;
+                opcode_branch_d = opcode == `OPCODE_BRANCH;
+                opcode_jal_d    = opcode == `OPCODE_JAL;
+                opcode_jalr_d   = opcode == `OPCODE_JALR;
+                opcode_lui_d    = opcode == `OPCODE_LUI;
+                opcode_auipc_d  = opcode == `OPCODE_AUIPC;
+                opcode_system_d = opcode == `OPCODE_SYSTEM;
+                opcode_fence_d  = opcode == `OPCODE_FENCE;
+
                 //// Opcode Type ////
                 o_opcode[`RTYPE]  <= opcode_rtype_d;
                 o_opcode[`ITYPE]  <= opcode_itype_d;
