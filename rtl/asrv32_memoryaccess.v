@@ -3,7 +3,7 @@
 
 `include "asrv32_header.vh"
 
-/* MemAccess Module & Ports Declaration*/
+/* MemAccess Module & Ports Declaration */
 module asrv32_memoryaccess(
     /* Inputs */
     input wire i_clk,                       // Clock signal

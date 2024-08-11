@@ -21,8 +21,9 @@ module asrv32_fsm (
     output reg[31:0] o_op1,                 // ALU operand 1 output
     output reg[31:0] o_op2,                 // ALU operand 2 output
     output wire o_alu_stage_en,             // ALU stage enable signal
-    output wire o_memoryaccess_stage_en,      // Memory access stage enable signal
-    output wire o_writeback_stage_en        // Writeback stage enable signal
+    output wire o_memoryaccess_stage_en,    // Memory access stage enable signal
+    output wire o_writeback_stage_en,       // Writeback stage enable signal
+    output wire o_csr_stage_en              // CSR Stage enable signal (high if stage is on EXECUTE, CSR Operations take place between EXECUTE and MEMACCESS Stage as they require address calculated by the ALU)
 );
 
     /* Internal Wires for decoding opcode signals. */
@@ -97,7 +98,8 @@ module asrv32_fsm (
 
     /* Stage Enable Signals */
     assign o_alu_stage_en = o_stage_q == EXECUTE;               // ALU stage enable
-    assign o_memoryaccess_stage_en = o_stage_q == MEMORYACCESS;   // Memory access stage enable
+    assign o_memoryaccess_stage_en = o_stage_q == MEMORYACCESS; // Memory access stage enable
     assign o_writeback_stage_en = o_stage_q == WRITEBACK;       // Writeback stage enable
+    assign o_csr_stage_en = o_stage_q == MEMORYACCESS;          // CSR Stage enable (Asserted when next stage is MEMACCESS and current stage is EXECUTE)
     
 endmodule
