@@ -152,22 +152,6 @@ def link_object_file(asrv32_path, obj_directory):
         print(e.stderr)
         return False
 
-# Function to generate the memory file for Verilog
-def generate_memory_file(asrv32_path, obj_directory):
-    try:
-        # Generate the memory file
-        sections_command = [
-            'python3', f'{asrv32_path}/extra/sections.py',
-            f'{obj_directory}/memory.bin', f'{obj_directory}/memory.mem'
-        ]
-        subprocess.run(sections_command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        return True
-    except subprocess.CalledProcessError as e:
-        print(f"Error during memory file generation:")
-        print(e.stdout)
-        print(e.stderr)
-        return False
-
 # Function to generate the memory file using elf2hex
 def generate_memory_file_with_elf2hex(asrv32_path, obj_directory, bit_width=32):
     try:
@@ -200,21 +184,22 @@ def assemble_and_generate_memory_files(asrv32_path, testfile):
     if not assemble_source_file(asrv32_path, testfile, obj_directory):
         countmissing += 1
         missinglist += f"{testfile}\n"
-        return
+        return False
 
     # Step 2: Link the object file to create the binary
     if not link_object_file(asrv32_path, obj_directory):
         countfailed += 1
         failedlist += f"{testfile}\n"
-        return
+        return False
 
     # Step 3: Generate the memory file
     if not generate_memory_file_with_elf2hex(asrv32_path, obj_directory):
         countfailed += 1
         failedlist += f"{testfile}\n"
-        return
+        return False
 
     print(f"Successfully processed {testfile}.")
+    return True
        
 def run_tests(asrv32_path, top_module, specific_testfile=None):
     global countfile, countpassed, countfailed, countunknown, countmissing, failedlist, unknownlist, missinglist
@@ -233,16 +218,16 @@ def run_tests(asrv32_path, top_module, specific_testfile=None):
 
     for testfile in testfiles:
         print(f"TEST:{countfile}\tTestfile: {testfile}")
-        assemble_and_generate_memory_files(asrv32_path, testfile)
-        verilog_src_files = glob.glob(f"{asrv32_path}/rtl/*.v")
-        verilog_tb_file = [f"{asrv32_path}/test/SoC_TB/{top_module}.v"]
-        verilog_files = verilog_src_files + verilog_tb_file
-        Icarus_out_file = f"{top_module}.vvp"
-        compile_verilog(top_module, verilog_files, Icarus_out_file)
-        try:
-            simulate_verilog(top_module, Icarus_out_file,testfile)
-        except:
-            print("!!! Simulation Stuck !!!")
+        if assemble_and_generate_memory_files(asrv32_path, testfile):
+            verilog_src_files = glob.glob(f"{asrv32_path}/rtl/*.v")
+            verilog_tb_file = [f"{asrv32_path}/test/SoC_TB/{top_module}.v"]
+            verilog_files = verilog_src_files + verilog_tb_file
+            Icarus_out_file = f"{top_module}.vvp"
+            compile_verilog(top_module, verilog_files, Icarus_out_file)
+            try:
+                simulate_verilog(top_module, Icarus_out_file,testfile)
+            except:
+                print("!!! Simulation Stuck !!!")
         print("\n**********************************************************************************************\n")
 
     # Print the summary
