@@ -4,7 +4,7 @@ module asrv32_soc_TB;
 
     /******************************* MODIFY ****************************************/
     localparam MEMORY_DEPTH = 8192,         //number of memory bytes
-               DATA_START_ADDR = 32'h1000;  //starting address of data memory to be displayed
+               DATA_START_ADDR = 32'h1080;  //starting address of data memory to be displayed
     /*******************************************************************************/
                
     reg clk,rst_n;
@@ -74,4 +74,11 @@ module asrv32_soc_TB;
             
         $stop;
     end
+    initial begin
+		#5_000_000; //simulation time limit
+		`ifdef LONGER_SIM_LIMIT
+		#25_000_000;
+		`endif
+		$stop;
+	end
 endmodule
