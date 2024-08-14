@@ -17,6 +17,11 @@ module asrv32_alu
         output reg[31:0] o_alu_result       // Result of arithmetic operation by ALU
     );
 
+    /* For Testbench */
+    initial begin
+        o_alu_result = 0;
+    end
+
     /* Intermediate Register Declaration: */
     reg[31:0] y_d;  // Store ALU Result
     reg[31:0] a;    // Store Operand 1
