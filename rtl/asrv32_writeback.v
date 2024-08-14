@@ -74,11 +74,10 @@ module asrv32_writeback #(parameter PC_RESET = 32'h00_00_00_00) (
 
             // Handle JAL and JALR instructions
             if (opcode_jal || opcode_jalr) begin
+                if (opcode_jalr) a = i_rs1_data;
                 rd_d = pc_d; // Store next PC in rd
                 pc_d = sum; // Set PC to target address
-                if (opcode_jalr) a = i_rs1_data; 
             end 
-            if(opcode_jalr) a = i_rs1_data; // For JALR, base address is rs1
 
             // Handle LUI instruction
             if (opcode_lui) rd_d = i_imm;
