@@ -4,5 +4,8 @@
 # Ignore all Verilog Dump Files 
 *.vcd
 
+# Ignore any directory named obj regardless of its depth in the directory tree.
+**/obj/
+
 # Ignore Github DS Store Files created on Mac
 *.DS_Store
