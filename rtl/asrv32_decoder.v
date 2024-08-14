@@ -84,23 +84,31 @@ module asrv32_decoder
 */
 
     // Assign Opcodes
-    // always @(*) begin
-    //     opcode_rtype_d  = opcode == `OPCODE_RTYPE;
-    //     opcode_itype_d  = opcode == `OPCODE_ITYPE;
-    //     opcode_load_d   = opcode == `OPCODE_LOAD;
-    //     opcode_store_d  = opcode == `OPCODE_STORE;
-    //     opcode_branch_d = opcode == `OPCODE_BRANCH;
-    //     opcode_jal_d    = opcode == `OPCODE_JAL;
-    //     opcode_jalr_d   = opcode == `OPCODE_JALR;
-    //     opcode_lui_d    = opcode == `OPCODE_LUI;
-    //     opcode_auipc_d  = opcode == `OPCODE_AUIPC;
-    //     opcode_system_d = opcode == `OPCODE_SYSTEM;
-    //     opcode_fence_d  = opcode == `OPCODE_FENCE;
-    // end
+    always @* begin
+        /// Opcode Type ///
+        opcode_rtype_d  = opcode == `OPCODE_RTYPE;
+        opcode_itype_d  = opcode == `OPCODE_ITYPE;
+        opcode_load_d   = opcode == `OPCODE_LOAD;
+        opcode_store_d  = opcode == `OPCODE_STORE;
+        opcode_branch_d = opcode == `OPCODE_BRANCH;
+        opcode_jal_d    = opcode == `OPCODE_JAL;
+        opcode_jalr_d   = opcode == `OPCODE_JALR;
+        opcode_lui_d    = opcode == `OPCODE_LUI;
+        opcode_auipc_d  = opcode == `OPCODE_AUIPC;
+        opcode_system_d = opcode == `OPCODE_SYSTEM;
+        opcode_fence_d  = opcode == `OPCODE_FENCE;
+        
+        /*********************** decode possible exceptions ***********************/
+        system_noncsr = opcode == `OPCODE_SYSTEM && funct3_d == 0 ; //system instruction but not CSR operation
+        
+        // Check if instruction is illegal    
+        valid_opcode = (opcode_rtype_d || opcode_itype_d || opcode_load_d || opcode_store_d || opcode_branch_d || opcode_jal_d || opcode_jalr_d || opcode_lui_d || opcode_auipc_d || opcode_system_d || opcode_fence_d);
+        illegal_shift = (opcode_itype_d && (alu_sll_d || alu_srl_d || alu_sra_d)) && i_inst[25];
+    end
 
     // Decode operation for ALU
     always @* begin
-        // imm_d = 0;
+        imm_d = 0;
         alu_add_d = 0;
         alu_sub_d = 0;
         alu_slt_d = 0;
@@ -208,20 +216,7 @@ module asrv32_decoder
             else begin
                 o_funct3    <= funct3_d;
                 o_imm       <= imm_d;
-
-                opcode_rtype_d  = opcode == `OPCODE_RTYPE;
-                opcode_itype_d  = opcode == `OPCODE_ITYPE;
-                opcode_load_d   = opcode == `OPCODE_LOAD;
-                opcode_store_d  = opcode == `OPCODE_STORE;
-                opcode_branch_d = opcode == `OPCODE_BRANCH;
-                opcode_jal_d    = opcode == `OPCODE_JAL;
-                opcode_jalr_d   = opcode == `OPCODE_JALR;
-                opcode_lui_d    = opcode == `OPCODE_LUI;
-                opcode_auipc_d  = opcode == `OPCODE_AUIPC;
-                opcode_system_d = opcode == `OPCODE_SYSTEM;
-                opcode_fence_d  = opcode == `OPCODE_FENCE;
-
-                //// Opcode Type ////
+                /// Opcode Type ///
                 o_opcode[`RTYPE]  <= opcode_rtype_d;
                 o_opcode[`ITYPE]  <= opcode_itype_d;
                 o_opcode[`LOAD]   <= opcode_load_d;
@@ -233,7 +228,7 @@ module asrv32_decoder
                 o_opcode[`AUIPC]  <= opcode_auipc_d;
                 o_opcode[`SYSTEM] <= opcode_system_d;
                 o_opcode[`FENCE]  <= opcode_fence_d;
-                /// ALU Operations ////
+                /// ALU Operations ///
                 o_alu_op[`ADD]  <= alu_add_d;
                 o_alu_op[`SUB]  <= alu_sub_d;
                 o_alu_op[`SLT]  <= alu_slt_d;
@@ -249,13 +244,7 @@ module asrv32_decoder
                 o_alu_op[`GE]   <= alu_ge_d; 
                 o_alu_op[`GEU]  <= alu_geu_d;
 
-                /*********************** Decode possible exceptions ***********************/
-                system_noncsr = opcode == `OPCODE_SYSTEM && funct3_d == 0 ; //system instruction but not CSR operation
-
-                // Check if instruction is illegal    
-                valid_opcode = (opcode_rtype_d || opcode_itype_d || opcode_load_d || opcode_store_d || opcode_branch_d || opcode_jal_d || opcode_jalr_d || opcode_lui_d || opcode_auipc_d || opcode_system_d || opcode_fence_d);
-                illegal_shift = (opcode_itype_d && (alu_sll_d || alu_srl_d || alu_sra_d)) && i_inst[25];
-
+                /*********************** decode possible exceptions ***********************/
                 o_exception[`ILLEGAL] <= !valid_opcode || illegal_shift;
 
                 // Check if ECALL
@@ -267,7 +256,6 @@ module asrv32_decoder
                 // Check if MRET
                 o_exception[`MRET] <= (system_noncsr && i_inst[21:20]==2'b10)? 1:0;
                 /***************************************************************************/
-
             end
         end
 endmodule
