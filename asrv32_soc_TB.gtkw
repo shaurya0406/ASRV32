@@ -1,0 +1,55 @@
+[*]
+[*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
+[*] Fri Aug  9 14:21:01 2024
+[*]
+[dumpfile] "/Users/shacha/ASRV32/asrv32_soc_TB.vcd"
+[dumpfile_mtime] "Fri Aug  9 14:15:13 2024"
+[dumpfile_size] 23688
+[savefile] "/Users/shacha/ASRV32/asrv32_soc_TB.gtkw"
+[timestart] 0
+[size] 1728 515
+[pos] -1 -1
+*-17.690561 -1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[treeopen] asrv32_soc_TB.
+[treeopen] asrv32_soc_TB.uut.
+[sst_width] 253
+[signals_width] 207
+[sst_expanded] 1
+[sst_vpaned_height] 129
+@200
+-SoC_TB
+@28
+asrv32_soc_TB.clk
+asrv32_soc_TB.rst_n
+@200
+-UUT
+@22
+asrv32_soc_TB.uut.iaddr[31:0]
+asrv32_soc_TB.uut.inst[31:0]
+asrv32_soc_TB.uut.daddr[31:0]
+asrv32_soc_TB.uut.din[31:0]
+asrv32_soc_TB.uut.dout[31:0]
+@200
+-Core
+@25
+asrv32_soc_TB.uut.m0.stage_q[2:0]
+@200
+-
+@22
+asrv32_soc_TB.uut.m0.rs1_addr[4:0]
+asrv32_soc_TB.uut.m0.rs2_addr[4:0]
+asrv32_soc_TB.uut.m0.rd_addr[4:0]
+@200
+-
+@22
+asrv32_soc_TB.uut.m0.rs1_data[31:0]
+asrv32_soc_TB.uut.m0.rs2_data[31:0]
+asrv32_soc_TB.uut.m0.rd_data[31:0]
+asrv32_soc_TB.uut.m0.imm[31:0]
+@200
+-
+@22
+asrv32_soc_TB.uut.m0.opcode[10:0]
+asrv32_soc_TB.uut.m0.alu_op[13:0]
+[pattern_trace] 1
+[pattern_trace] 0
