@@ -219,9 +219,34 @@ initial begin
         end     
     end
 
+/* Cobinational Logic for trap-handling sequence */
+    always @(*) begin
+        // Resetting all values for initialisation
+        external_interrupt_pending = 0;
+        software_interrupt_pending = 0;
+        timer_interrupt_pending = 0;
+        is_interrupt = 0;
+        is_exception = 0;
+        is_trap = 0;
+        go_to_trap = 0;
+        return_from_trap = 0;
+
+        // Assigning Updated Values
+        if(i_csr_stage_en) begin
+            external_interrupt_pending =  mstatus_mie && mie_meie && (mip_meip);   // machine_interrupt_enable + machine_external_interrupt_enable + machine_external_interrupt_pending must all be high
+            software_interrupt_pending = mstatus_mie && mie_msie && mip_msip;      // machine_interrupt_enable + machine_software_interrupt_enable + machine_software_interrupt_pending must all be high
+            timer_interrupt_pending = mstatus_mie && mie_mtie && mip_mtip;         // machine_interrupt_enable + machine_timer_interrupt_enable + machine_timer_interrupt_pending must all be high
+            
+            is_interrupt = external_interrupt_pending || software_interrupt_pending || timer_interrupt_pending;
+            is_exception = i_is_inst_illegal || is_inst_addr_misaligned || i_is_ecall || i_is_ebreak || is_load_addr_misaligned || is_store_addr_misaligned ;
+            is_trap = is_interrupt || is_exception;
+            go_to_trap = is_trap; // A trap is taken, save i_pc, and go to trap address
+            return_from_trap = i_is_mret; // Return from trap, go back to saved i_pc
+        end
+    end
+
 /* 
 TODO: Control Logic for writing to CSRs
-   * Logic for trap-handling sequence
    * Assign CSR Stored Data based on regsters
    * Decode CSR Input Data to be stored
    * CSR Control Logic
