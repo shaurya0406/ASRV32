@@ -339,10 +339,23 @@ initial begin
         endcase
     end
 
+/* Assign CSR Input Data to be stored (Combinational Logic) */
+    always @(*) begin
+        // Assign csr_in (data TO BE stored to CSR)
+        case(i_funct3) // CSR instruction type
+            CSRRW: csr_in = i_rs1;                  // CSR read-write
+            CSRRS: csr_in = csr_data | i_rs1;       // CSR read-set
+            CSRRC: csr_in = csr_data & (~i_rs1);    // CSR read-clear
+           CSRRWI: csr_in = i_imm;                  // csr read-write immediate
+           CSRRSI: csr_in = csr_data | i_imm;       // CSR read-set immediate
+           CSRRCI: csr_in = csr_data & (~i_imm);    // CSR read-clear immediate
+        endcase
+    end
+
 /* 
 TODO: Control Logic for writing to CSRs
-   * Decode CSR Input Data to be stored
    * CSR Control Logic
+   * Register the Outputs
 */
 
 endmodule
