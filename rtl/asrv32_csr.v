@@ -107,7 +107,19 @@ module asrv32_csr #(parameter CLK_FREQ_MHZ = 100, TRAP_ADDRESS = 0) (
                 LOAD_ADDRESS_MISALIGNED         = 4,
                 STORE_ADDRESS_MISALIGNED        = 6,
                 ECALL                           = 11;
-    
+
+/* Wrap value for 1 millisecond */ 
+    localparam MILLISEC_WRAP =  (CLK_FREQ_MHZ*10**6)/1000;
+
+// For Testbench
+initial begin
+        o_csr_out = 0;
+        o_return_address = 0;
+        o_trap_address = 0;
+        o_go_to_trap_q = 0;
+        o_return_from_trap_q = 0;
+    end
+
 /* Internal Signals and Registers to hold input values */  
 
     wire opcode_store   = i_opcode[`STORE];
@@ -116,5 +128,38 @@ module asrv32_csr #(parameter CLK_FREQ_MHZ = 100, TRAP_ADDRESS = 0) (
     wire opcode_jal     = i_opcode[`JAL];
     wire opcode_jalr    = i_opcode[`JALR];
     wire opcode_system  = i_opcode[`SYSTEM];
+
+    wire csr_enable = i_opcode_system && i_funct3!=0 && i_csr_stage; // CSR operation is enabled only at this conditions
+    reg[31:0] csr_in;   // Data to be stored to CSR
+    reg[31:0] csr_data; // Data at current CSR address
+
+    reg[1:0] new_pc = 0; // Last two bits of i_pc that will be used in taken branch and jumps
+
+    reg is_trap;
+    reg go_to_trap;         // High before going to trap (if exception/interrupt detected)
+    reg return_from_trap;   // High before returning from trap (via mret)
+
+    reg is_exception;
+    reg is_load_addr_misaligned; 
+    reg is_store_addr_misaligned;
+    reg is_inst_addr_misaligned;
+
+    reg is_interrupt;
+    reg timer_interrupt;
+    reg external_interrupt_pending; 
+    reg software_interrupt_pending;
+    reg timer_interrupt_pending;
+
+// TODO: Initialise CSR Individual Register Bits 
+
+// TODO: Logic for load/store/instruction misaligned exception
+
+/* 
+TODO: Control Logic for all CSRs
+   * Logic for trap-handling sequence
+   * Assign CSR Stored Data based on regsters
+   * Decode CSR Input Data to be stored
+   * CSR Control Logic
+*/
 
 endmodule
