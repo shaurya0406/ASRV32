@@ -31,11 +31,18 @@ module asrv32_csr #(parameter CLK_FREQ_MHZ = 100, TRAP_ADDRESS = 0) (
     input wire[`OPCODE_WIDTH-1:0] i_opcode, // Opcode types required: LOAD, STORE, BRANCH, JAL & JALR
     input wire[31:0] i_alu_result,          // Sum from ALU (address used in load/store/jump/branch)
 
+    // CSR Instruction // 
+    input wire[2:0]  i_funct3,      // CSR instruction operation (Opcode Type Required: SYSTEM)
+    input wire[11:0] i_csr_index,   // Immediate value from decoder
+    input wire[31:0] i_imm,         // Unsigned Immediate for immediate type of CSR instruction (new value to be stored to CSR)
+    input wire[31:0] i_rs1,         // Source register 1 value (new value to be stored to CSR)
+    
+    output reg[31:0] o_csr_out, //CSR value to be loaded to basereg
+    
     // Trap-Handler //
     input wire[31:0] i_pc,              // Program Counter 
     input wire i_minstret_inc,          // Increment MINSTRET after executing an instruction
 
-    /* Outputs */
     output reg[31:0] o_return_address,  // MEPC CSR
     output reg[31:0] o_trap_address,    // MTVEC CSR
     output reg o_go_to_trap_q,          // High before going to trap (if exception/interrupt detected)
