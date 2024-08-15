@@ -185,10 +185,42 @@ initial begin
     reg mcountinhibit_cy = 0; // Controls increment of mcycle
     reg mcountinhibit_ir = 0; // Controls increment of minstret
 
-// TODO: Logic for load/store/instruction misaligned exception
+/* Combinational Logic for load/store/instruction misaligned exception detection */
+
+    always @* begin
+        is_load_addr_misaligned = 0;
+        is_store_addr_misaligned = 0;
+        is_inst_addr_misaligned = 0;
+        new_pc = 0;
+        
+        // Misaligned Load/Store Address
+        if(i_funct3[1:0] == 2'b01) begin // halfword load/store
+            is_load_addr_misaligned = opcode_load? i_alu_result[0] : 0;
+            is_store_addr_misaligned = opcode_store? i_alu_result[0] : 0;
+        end
+        if(i_funct3[1:0] == 2'b10) begin // word load/store
+            is_load_addr_misaligned = opcode_load? i_alu_result[1:0]!=2'b00 : 0;
+            is_store_addr_misaligned = opcode_store? i_alu_result[1:0]!=2'b00 : 0;
+        end
+        
+        // Misaligned Instruction Address
+        /* 
+        ? Volume 1 pg. 15: Instructions are 32 bits in length and must be aligned on a four-byte boundary in memory.
+        ? An instruction-address-misaligned exception is generated on a taken branch or unconditional jump
+        ? if the target address is not four-byte aligned. This exception is reported on the branch or jump
+        ? instruction, not on the target instruction. No instruction-address-misaligned exception is generated
+        ? for a conditional branch that is not taken. 
+        */
+
+        if((opcode_branch && i_alu_result[0]) || opcode_jal || opcode_jalr) begin // branch or jump to new instruction
+            new_pc = i_pc[1:0] + i_csr_index[1:0];
+            if(opcode_jalr) new_pc = i_rs1[1:0] +  i_csr_index[1:0];
+            is_inst_addr_misaligned = (new_pc == 2'b00)? 1'b0:1'b1; //i_pc (instruction address) must always be four bytes aligned
+        end     
+    end
 
 /* 
-TODO: Control Logic for all CSRs
+TODO: Control Logic for writing to CSRs
    * Logic for trap-handling sequence
    * Assign CSR Stored Data based on regsters
    * Decode CSR Input Data to be stored
