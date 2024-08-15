@@ -578,10 +578,23 @@ initial begin
         end
     end
 
-/* 
-TODO: Control Logic for writing to CSRs
-   * CSR Control Logic
-   * Register the Outputs
-*/
+/* Register the Outputs */
+
+    always @(posedge i_clk, negedge i_rst_n) begin
+        // CSR Output
+        o_csr_out <= csr_enable? csr_data: o_csr_out; //registered output for o_csr_out        
+        // Trap Handler Outputs
+        o_go_to_trap_q <= go_to_trap;
+        o_return_from_trap_q <= return_from_trap;
+        o_return_address <= mepc;
+        /* 
+        ? Volume 2 pg. 30: When MODE=Direct (0), all traps into machine mode cause the i_pc to be set to the address in the  
+        ? BASE field. When MODE=Vectored (1), all synchronous exceptions into machine mode cause the i_pc to be set to the address 
+        ? in the BASE field, whereas interrupts cause the i_pc to be set to the address in the BASE field plus four times the
+        ? interrupt cause number 
+        */
+        if(mtvec_mode[1] && is_interrupt) o_trap_address <= {mtvec_base,2'b00} + mcause_code<<2;
+        else o_trap_address <= {mtvec_base,2'b00};    
+    end
 
 endmodule
