@@ -27,7 +27,7 @@ module asrv32_fsm (
     output wire o_done_tick                 // High for one clock cycle at the end of every instruction for MINSTRET CSR 
 );
 
-    /* Internal Wires for decoding opcode signals. */
+/* Internal Wires for decoding opcode signals. */
     wire opcode_rtype = i_opcode[`RTYPE];
     wire opcode_itype = i_opcode[`ITYPE];
     wire opcode_load = i_opcode[`LOAD];
@@ -40,14 +40,14 @@ module asrv32_fsm (
     wire opcode_system = i_opcode[`SYSTEM];
     wire opcode_fence = i_opcode[`FENCE];
 
-    /* FSM State Definitions */
+/* FSM State Definitions */
     localparam  FETCH = 0,        // Fetch stage
                 DECODE = 1,       // Decode stage
                 EXECUTE = 2,      // Execute stage
                 MEMORYACCESS = 3, // Memory access stage
                 WRITEBACK = 4;    // Writeback stage
 
-    /* Initial Values for Stage and Instruction */
+/* Initial Values for Stage and Instruction */
     initial begin
         o_stage_q = FETCH; // Initial stage is FETCH
         o_inst_q = 0;      // Initial instruction is 0
@@ -56,7 +56,7 @@ module asrv32_fsm (
     reg[2:0] stage_d;   // Next stage
     reg[31:0] inst_d;   // Next instruction
 
-    /* FSM Logic for 5-stage processor (unpipelined) */  
+/* FSM Logic for 5-stage processor (unpipelined) */  
     always @* begin
         stage_d = o_stage_q; // Default next stage is current stage
         inst_d = o_inst_q;   // Default next instruction is current instruction
@@ -85,7 +85,7 @@ module asrv32_fsm (
         endcase
     end
 
-    /* Register Operation */
+/* Register Operation */
     always @(posedge i_clk, negedge i_rst_n) begin
         if(!i_rst_n) begin
             o_stage_q <= FETCH;     // Reset stage to Fetch
@@ -97,7 +97,7 @@ module asrv32_fsm (
         end
     end
 
-    /* Stage Enable Signals */
+/* Stage Enable Signals */
     assign o_alu_stage_en = o_stage_q == EXECUTE;                       // ALU stage enable
     assign o_memoryaccess_stage_en = o_stage_q == MEMORYACCESS;         // Memory access stage enable
     assign o_writeback_stage_en = o_stage_q == WRITEBACK;               // Writeback stage enable
