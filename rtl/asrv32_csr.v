@@ -111,7 +111,7 @@ module asrv32_csr #(parameter CLK_FREQ_MHZ = 100, TRAP_ADDRESS = 0) (
 /* Wrap value for 1 millisecond */ 
     localparam MILLISEC_WRAP =  (CLK_FREQ_MHZ*10**6)/1000;
 
-// For Testbench
+// Initialise Outputs to 0 For Testbench
 initial begin
         o_csr_out = 0;
         o_return_address = 0;
@@ -129,7 +129,7 @@ initial begin
     wire opcode_jalr    = i_opcode[`JALR];
     wire opcode_system  = i_opcode[`SYSTEM];
 
-    wire csr_enable = i_opcode_system && i_funct3!=0 && i_csr_stage; // CSR operation is enabled only at this conditions
+    wire csr_enable = opcode_system && i_funct3!=0 && i_csr_stage_en; // CSR operation is enabled only at this conditions
     reg[31:0] csr_in;   // Data to be stored to CSR
     reg[31:0] csr_data; // Data at current CSR address
 
