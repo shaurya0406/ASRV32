@@ -245,9 +245,102 @@ initial begin
         end
     end
 
+/* Assign CSR Stored Data based on regsters (Combinational Logic) */
+
+    always @(*) begin
+        csr_data = 0;
+        csr_in = 0;
+
+        case(i_csr_index)
+            // Machine info
+            MVENDORID   :       csr_data = 32'h0; // MVENDORID (JEDEC manufacturer ID)
+            MARCHID     :       csr_data = 32'h0; // MARCHID (open-source project architecture ID allocated by RISC-V International  ( https://github.com/riscv/riscv-isa-manual/blob/master/marchid.md ))
+            MIMPID      :       csr_data = 32'h0; // MIMPID (version of the processor implementation (provided by author of source code))
+            MHARTID     :       csr_data = 32'h0; // MHARTID (integer ID of the hart that is currently running the code (one hart must have an ID of zero))             
+            
+            // Machine trap setup  
+            MSTATUS:        begin // MSTATUS (controls hart's current operating state (mie and mpie are the only configurable bits))
+                                csr_data[3] = mstatus_mie;
+                                csr_data[7] = mstatus_mpie;
+                                csr_data[12:11] = mstatus_mpp; //MPP
+                            end
+
+            MISA:           begin // MISA (control and monitor hart's current operating state)
+                                csr_data[8] = 1'b1;         // RV32I/64I/128I base ISA (ISA supported by the hart)
+                                csr_data[31:30] = 2'b01;    // Base 32
+                            end
+
+            MIE:            begin // MIE (interrupt enable bits)
+                                csr_data[3] = mie_msie;
+                                csr_data[7] = mie_mtie;
+                                csr_data[11] = mie_meie;
+                            end
+
+            MTVEC:          begin // MTVEC (trap vector configuration (base+mode))
+                                csr_data = {mtvec_base,mtvec_mode};
+                            end
+                       
+            // Machine trap handling
+            MSCRATCH:       begin // MSCRATCH (dedicated for use by machine code) 
+                                csr_data = mscratch;
+                            end
+
+            MEPC:           begin // MEPC (address of interrupted instruction)
+                                csr_data = mepc; 
+                            end
+
+            MCAUSE:         begin // MCAUSE (indicates cause of trap(either interrupt or exception))
+                                csr_data[31] = mcause_intbit; 
+                                csr_data[3:0] = mcause_code;
+                            end
+
+            MTVAL:          begin // MTVAL (exception-specific information to assist software in handling trap)
+                                csr_data = mtval;
+                            end
+
+            MIP:            begin // MIP (pending interrupts)
+                                csr_data[3] = mip_msip;
+                                csr_data[7] = mip_mtip;
+                                csr_data[11] = mip_meip;
+                            end
+                       
+            // Machine counters/timers
+            MCYCLE:         begin // MCYCLE (counts number of i_clk cycle executed by core [LOWER HALF])
+                                csr_data = mcycle[31:0];
+                            end
+
+            MCYCLEH:        begin // MCYCLE (counts number of i_clk cycle executed by core [UPPER HALF])
+                                csr_data = mcycle[63:32];
+                            end
+
+            TIME:           begin // TIME (real-time i_clk [millisecond increment] [LOWER HALF])
+                                csr_data = mtime[31:0];  
+                            end
+
+            TIMEH:          begin // TIME (real-time i_clk [millisecond increment] [LOWER HALF])
+                                csr_data = mtime[63:32]; 
+                            end
+
+            MINSTRET:       begin // MINSTRET (counts number instructions retired/executed by core [LOWER half])     
+                                csr_data = minstret[31:0];
+                            end
+
+            MINSTRETH:      begin // MINSTRET (counts number instructions retired/executed by core [UPPER half])     
+                                csr_data = minstret[63:32];
+                            end
+                       
+            MCOUNTINHIBIT:  begin // MCOUNTINHIBIT (controls which hardware performance-monitoring counters can increment)
+                                csr_data[0] = mcountinhibit_cy;
+                                csr_data[2] = mcountinhibit_ir;
+                            end
+                       
+            default: csr_data = 0;
+
+        endcase
+    end
+
 /* 
 TODO: Control Logic for writing to CSRs
-   * Assign CSR Stored Data based on regsters
    * Decode CSR Input Data to be stored
    * CSR Control Logic
 */
