@@ -4,9 +4,17 @@
 `include "asrv32_header.vh"
 
 // Complete SoC package containing the main CPU asrv32_core and Main Memory (Combined Instruction & Data Memory)
-module asrv32_soc #(parameter PC_RESET=32'h00_00_00_00, MEMORY_DEPTH=1024) ( 
+module asrv32_soc #(parameter CLK_FREQ_MHZ=100, PC_RESET=32'h00_00_00_00, TRAP_ADDRESS=32'h00_00_00_00, MEMORY_DEPTH=1024) ( 
     input wire clk, // System clock
-    input wire rst_n // Active low reset
+    input wire rst_n, // Active low reset
+    //Interrupts
+    input wire i_external_interrupt, //interrupt from external source
+    input wire i_software_interrupt, //interrupt from software
+    // Timer Interrupt
+    input wire i_mtime_wr, //write to mtime
+    input wire i_mtimecmp_wr,  //write to mtimecmp
+    input wire[63:0] i_mtime_din, //data to be written to mtime
+    input wire[63:0] i_mtimecmp_din //data to be written to mtimecmp
     );
     
     // Instruction Memory Interface
@@ -21,7 +29,7 @@ module asrv32_soc #(parameter PC_RESET=32'h00_00_00_00, MEMORY_DEPTH=1024) (
     wire wr_en; // Write enable 
 
     // Main ASRV32 core instantiation
-    asrv32_core #(.PC_RESET(32'h00_00_00_00)) m0( 
+    asrv32_core #(.PC_RESET(PC_RESET),.CLK_FREQ_MHZ(CLK_FREQ_MHZ), .TRAP_ADDRESS(TRAP_ADDRESS)) m0( 
         .i_clk(clk), // System clock
         .i_rst_n(rst_n), // Active low reset
         // Instruction Memory Interface
@@ -32,7 +40,15 @@ module asrv32_soc #(parameter PC_RESET=32'h00_00_00_00, MEMORY_DEPTH=1024) (
         .o_store_data(dout), // Data to be stored to memory
         .o_store_data_addr(daddr), // Address of data memory for store/load
         .o_wr_mask(wr_mask), // Write mask control
-        .o_wr_en(wr_en) // Write enable 
+        .o_wr_en(wr_en), // Write enable 
+        //Interrupts
+        .i_external_interrupt(i_external_interrupt), //interrupt from external source
+        .i_software_interrupt(i_software_interrupt), //interrupt from software
+        // Timer Interrupt
+        .i_mtime_wr(i_mtime_wr), //write to mtime
+        .i_mtimecmp_wr(i_mtimecmp_wr),  //write to mtimecmp
+        .i_mtime_din(i_mtime_din), //data to be written to mtime
+        .i_mtimecmp_din(i_mtimecmp_din) //data to be written to mtimecmp
     );
         
     // Main memory instantiation
