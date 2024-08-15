@@ -132,10 +132,12 @@ module asrv32_core #(parameter PC_RESET = 32'h00_00_00_00, CLK_FREQ_MHZ = 100, T
         .i_clk(i_clk),
         .i_rst_n(i_rst_n),
         .i_writeback_en(writeback_stage_en), //enable wr_rd iff stage is currently on WRITEBACK
+        .i_funct3(funct3),
         .i_result_from_alu(alu_result), //output of ALU
         .i_imm(imm), //immediate value
         .i_rs1_data(rs1_data), //source register 1 value
         .i_load_data_from_memory(load_data), //data to be loaded to base reg
+        .i_load_data_from_csr(csr_out),
         .i_opcode(opcode),
         
         // Trap-Handler
