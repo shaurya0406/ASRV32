@@ -249,7 +249,6 @@ initial begin
 
     always @(*) begin
         csr_data = 0;
-        csr_in = 0;
 
         case(i_csr_index)
             // Machine info
@@ -341,6 +340,7 @@ initial begin
 
 /* Assign CSR Input Data to be stored (Combinational Logic) */
     always @(*) begin
+        csr_in = 0;
         // Assign csr_in (data TO BE stored to CSR)
         case(i_funct3) // CSR instruction type
             CSRRW: csr_in = i_rs1;                  // CSR read-write
