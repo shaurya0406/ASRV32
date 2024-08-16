@@ -1,26 +1,54 @@
 [*]
 [*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
-[*] Fri Aug  9 14:21:01 2024
+[*] Fri Aug 16 09:39:34 2024
 [*]
 [dumpfile] "/Users/shacha/ASRV32/asrv32_soc_TB.vcd"
-[dumpfile_mtime] "Fri Aug  9 14:15:13 2024"
-[dumpfile_size] 23688
+[dumpfile_mtime] "Fri Aug 16 09:39:20 2024"
+[dumpfile_size] 240447
 [savefile] "/Users/shacha/ASRV32/asrv32_soc_TB.gtkw"
-[timestart] 0
-[size] 1728 515
+[timestart] 599100
+[size] 1728 830
 [pos] -1 -1
-*-17.690561 -1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+*-15.690561 727300 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[markername] AA
+[markername] BB
+[markername] CC
+[markername] DD
+[markername] EE
+[markername] FF
+[markername] GG
+[markername] HH
+[markername] II
+[markername] JJ
+[markername] KK
+[markername] LL
+[markername] MM
+[markername] NN
+[markername] OO
+[markername] PP
+[markername] QQ
+[markername] RR
+[markername] SS
+[markername] TT
+[markername] UU
+[markername] VV
+[markername] WW
+[markername] XX
+[markername] YY
+[markername] ZZ
 [treeopen] asrv32_soc_TB.
 [treeopen] asrv32_soc_TB.uut.
+[treeopen] asrv32_soc_TB.uut.m0.
 [sst_width] 253
-[signals_width] 207
+[signals_width] 356
 [sst_expanded] 1
-[sst_vpaned_height] 129
+[sst_vpaned_height] 240
 @200
 -SoC_TB
 @28
 asrv32_soc_TB.clk
 asrv32_soc_TB.rst_n
+asrv32_soc_TB.external_interrupt
 @200
 -UUT
 @22
@@ -31,7 +59,7 @@ asrv32_soc_TB.uut.din[31:0]
 asrv32_soc_TB.uut.dout[31:0]
 @200
 -Core
-@25
+@24
 asrv32_soc_TB.uut.m0.stage_q[2:0]
 @200
 -
@@ -51,5 +79,36 @@ asrv32_soc_TB.uut.m0.imm[31:0]
 @22
 asrv32_soc_TB.uut.m0.opcode[10:0]
 asrv32_soc_TB.uut.m0.alu_op[13:0]
+@200
+-CSR
+@28
+asrv32_soc_TB.uut.m0.m6.csr_enable
+@22
+asrv32_soc_TB.uut.m0.m6.i_csr_index[11:0]
+@28
+asrv32_soc_TB.uut.m0.m6.i_funct3[2:0]
+@22
+asrv32_soc_TB.uut.m0.m6.i_rs1[31:0]
+asrv32_soc_TB.uut.m0.m6.csr_in[31:0]
+asrv32_soc_TB.uut.m0.m6.o_csr_out[31:0]
+@24
+asrv32_soc_TB.uut.m0.m6.csr_data[31:0]
+@28
+asrv32_soc_TB.uut.m0.m6.i_csr_stage_en
+@22
+asrv32_soc_TB.uut.m0.m6.mtval[31:0]
+@24
+asrv32_soc_TB.uut.m0.m6.mtvec_base[29:0]
+@28
+asrv32_soc_TB.uut.m0.m6.mtvec_mode[1:0]
+@200
+-CSR Interrupts
+@28
+asrv32_soc_TB.uut.m0.m6.mie_meie
+asrv32_soc_TB.uut.m0.m6.mstatus_mie
+asrv32_soc_TB.uut.m0.m6.mip_meip
+asrv32_soc_TB.uut.m0.m6.i_external_interrupt
+asrv32_soc_TB.uut.m0.m6.is_interrupt
+asrv32_soc_TB.uut.m0.m6.go_to_trap
 [pattern_trace] 1
 [pattern_trace] 0
