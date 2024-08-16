@@ -277,7 +277,7 @@ def run_tests(asrv32_path, top_module, test_type):
         verilog_src_files = glob.glob(f"{asrv32_path}/rtl/*.v")
         verilog_tb_file = [f"{asrv32_path}/test/SoC_TB/{top_module}.v"]
         verilog_files = verilog_src_files + verilog_tb_file
-        Icarus_out_file = f"{top_module}.vvp"
+        Icarus_out_file = f"{asrv32_path}/{top_module}.vvp"
         compile_verilog(top_module, verilog_files, Icarus_out_file)
 
         simulate_verilog(top_module, Icarus_out_file, elf_file)
@@ -330,7 +330,7 @@ def main():
 
     elif action == 'sim_gui':
         Icarus_out_file = f"{asrv32_path}/{top_module}.vvp"
-        vcd_file = f"{top_module}.vcd"
+        vcd_file = f"{asrv32_path}/{top_module}.vcd"
         if not os.path.exists(Icarus_out_file):
             print(f"Compiled Verilog output {Icarus_out_file} not found. Please compile first.")
             exit(1)
