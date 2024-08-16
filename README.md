@@ -16,10 +16,10 @@ RISCV Processor in Verilog HDL. (Currently FSM based.)
 ## TODO
 
 :white_check_mark: FSM based Core and SoC Integration
-
 :white_check_mark: Add more testcases for the testbench    
 :white_check_mark: Automate the testbench   
 :white_check_mark: Passed RISV International's RV32UI User Interface Tests (40/40)   
-:black_square_button: Add CSR Module to support FreeRTOS  
+:white_check_mark: Add CSR Module to support FreeRTOS  
+:white_check_mark: Passed RISV International's RV32MI User Interface Tests (14/14) 
 :black_square_button: Convert FSM based core implementation to pipeline     
 :black_square_button: Add RV32 Extensions
