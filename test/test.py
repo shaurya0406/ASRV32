@@ -14,6 +14,11 @@ failedlist=""   # stores lists of testfiles that FAILED
 unknownlist=""  # stores lists of testfiles that has UNKNOWN output
 missinglist=""  # stores list of testfiles that are missing
 
+## Debug Variables ##
+debug_objdump = False
+debug_exception = False
+debug_sbreak = False
+
 ## Function Definitions ##
 
 ##################################################### ENVIRONMENT SETUP #####################################################
@@ -44,6 +49,9 @@ def check_riscv_tests(asrv32_path):
 
 ##################################################### ICARUS VERILOG COMPILE #####################################################
 def compile_verilog(top_module, verilog_files, output_file):
+
+    global debug_exception, debug_sbreak
+
     # Get the ASRV32 path from the environment variable
     asrv32_path = os.getenv('ASRV32')
 
@@ -61,10 +69,14 @@ def compile_verilog(top_module, verilog_files, output_file):
         '-I', f'{asrv32_path}/rtl',   # The '-I' option specifies an include directory for additional Verilog source files; in this case, the 'rtl' directory within the ASRV32 path
         '-s', top_module,             # The '-s' option specifies the top module name to use as the simulation root
         '-DICARUS',                   # The '-DICARUS' option defines a preprocessor macro named 'ICARUS' for conditional compilation within the Verilog source files
-    ] + verilog_files                 # The 'verilog_files' list contains the paths to all the Verilog source files and the top testbench to be compiled; these are appended to the command list
+    ]                
 
+    if(debug_exception):
+        compile_command.append('-DHALT_ON_ILLEGAL_INSTRUCTION')
+    if(debug_sbreak):
+        compile_command.append('-DHALT_ON_ECALL')
+    compile_command+=verilog_files   # The 'verilog_files' list contains the paths to all the Verilog source files and the top testbench to be compiled; these are appended to the command list
 
-    # Execute the compilation command
     try:
         compile_process = subprocess.run(compile_command, capture_output=True, text=True, check=True)
         print("Icarus Compilation successful.")
@@ -173,6 +185,20 @@ def link_object_file(obj_files, output_file):
         return None
 
 def generate_memory_file(elf_file, obj_directory):
+    if(debug_objdump):
+        print("\n##############################################################\n")
+        try:
+            # riscv64-unknown-elf-objdump -M numeric -D ${ONAME}.bin -h
+            objdump_command =[
+                'riscv64-unknown-elf-objdump', '-M', 'numeric', '-D', elf_file, '-h'
+            ]
+            subprocess.run(objdump_command, check=True)
+        except subprocess.CalledProcessError as e:
+            print(f"Obj Dump failed:")
+            print(e.stdout)
+            print(e.stderr)
+        print( "\n##############################################################\n")
+    
     try:
         memory_file = f'{obj_directory}/memory.mem'
         elf2hex_command = [
@@ -189,6 +215,7 @@ def generate_memory_file(elf_file, obj_directory):
        
 def run_tests(asrv32_path, top_module, test_type):
     global countfile, countpassed, countfailed, countunknown, countmissing, failedlist, unknownlist, missinglist
+    global debug_objdump, debug_exception, debug_sbreak
 
     obj_directory = f"{asrv32_path}/test/obj"
     if os.path.exists(obj_directory):
@@ -198,17 +225,21 @@ def run_tests(asrv32_path, top_module, test_type):
     if test_type == "rv32ui":
         test_dir = f"{asrv32_path}/test/riscv-tests/isa/rv32ui/"
         test_files = glob.glob(f"{test_dir}*.S") + glob.glob(f"{test_dir}*.s") + glob.glob(f"{test_dir}*.c")
+        debug_objdump = False
     elif test_type == "rv32mi":
         test_dir = f"{asrv32_path}/test/riscv-tests/isa/rv32mi/"
         test_files = glob.glob(f"{test_dir}*.S") + glob.glob(f"{test_dir}*.s") + glob.glob(f"{test_dir}*.c")
+        debug_objdump = False
     elif test_type == "extra":
         test_dir = f"{asrv32_path}/test/testfiles/"
         test_files = glob.glob(f"{test_dir}*.S") + glob.glob(f"{test_dir}*.s") + glob.glob(f"{test_dir}*.c")
+        debug_objdump = False
     elif test_type == "all":
         for t in ["rv32ui", "rv32mi", "extra"]:
             run_tests(asrv32_path, top_module, t)
         return
     else:
+        debug_objdump = True
         test_files = [test_type]
         for test_file in test_files:
             if not os.path.exists(test_file):
@@ -222,6 +253,17 @@ def run_tests(asrv32_path, top_module, test_type):
         dir_name = os.path.basename(os.path.dirname(test_file))
         test_name = os.path.basename(test_file)
         print(f"TEST:{countfile}\tTestfile: {dir_name}/{test_name}")
+
+        if "exception" in test_file:
+            debug_exception = True
+            debug_sbreak = False
+        elif "sbreak" in test_file:
+            debug_exception = False
+            debug_sbreak = True
+        else:
+            debug_exception = False
+            debug_sbreak = False
+
         obj_file = compile_source_file(asrv32_path, test_file, obj_directory)
         if not obj_file:
             countmissing += 1
