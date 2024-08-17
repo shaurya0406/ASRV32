@@ -72,8 +72,8 @@ module asrv32_fsm (
             DECODE:         stage_d = EXECUTE;      // Move to Execute stage after decoding
 
             EXECUTE:begin // Execute ALU operation
-                            o_op1 = (opcode_jal || opcode_auipc)? i_pc : i_rs1_data;      // Determine ALU operand 1
-                            o_op2 = (opcode_rtype || opcode_branch)? i_rs2_data : i_imm;  // Determine ALU operand 2
+                            // o_op1 = (opcode_jal || opcode_auipc)? i_pc : i_rs1_data;      // Determine ALU operand 1
+                            // o_op2 = (opcode_rtype || opcode_branch)? i_rs2_data : i_imm;  // Determine ALU operand 2
                             stage_d = MEMORYACCESS; // Move to Memory Access stage
                     end
                   

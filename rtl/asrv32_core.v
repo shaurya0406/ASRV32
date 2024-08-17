@@ -107,9 +107,12 @@ module asrv32_core #(parameter PC_RESET = 32'h00_00_00_00, CLK_FREQ_MHZ = 100, T
         .i_clk(i_clk),
         .i_rst_n(i_rst_n),
         .i_alu_en(alu_stage_en), //update alu output iff stage is currently on EXECUTE (ALU stage)
-        .i_alu(alu_op),
-        .i_op1(op1), //rs1 or pc
-        .i_op2(op2), //rs2 or imm 
+        .i_alu_op(alu_op),
+        .i_opcode(opcode),
+        .i_imm(imm),
+        .i_rs1_data(rs1_data), //rs1 or pc
+        .i_rs2_data(rs2_data), //rs2 or imm 
+        .i_pc(pc),
         .o_alu_result(alu_result) //result of arithmetic operation  
     );
     
