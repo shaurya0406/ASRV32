@@ -22,7 +22,7 @@ module asrv32_memoryaccess(
     output reg o_wr_mem_en                  // Write to data memory if enabled
 );
 
-    /* Intermediate Register Declarations: */
+/* Intermediate Register Declarations: */
     reg[31:0] store_data_d; // Intermediate storage for o_store_data
     reg[31:0] load_data_d;  // Intermediate storage for o_load_data
     reg[3:0] wr_mask_d;     // Intermediate storage for wr_mask
@@ -30,7 +30,7 @@ module asrv32_memoryaccess(
     // Extract the last 2 bits of the address from the ALU result for byte/half-word addressing
     wire[1:0] addr_2 = i_result_from_alu[1:0]; // Last 2 bits of data memory address
 
-    /* Data Load/Store Logic: */
+/* Data Load/Store Logic: */
 
     // Determine data to be loaded to base register or stored to data memory 
     always @* begin
@@ -65,7 +65,7 @@ module asrv32_memoryaccess(
         endcase
     end
 
-    /* Register the outputs of this module */
+/* Register the outputs of this module */
     always @(posedge i_clk or negedge i_rst_n) begin
         if (!i_rst_n) begin
             o_store_data <= 0;

@@ -159,6 +159,7 @@ module asrv32_decoder
 */
 
     always @(*) begin
+        imm_d = 0;
         case(opcode)
         `OPCODE_ITYPE , `OPCODE_LOAD , `OPCODE_JALR: imm_d = {{20{i_inst[31]}},i_inst[31:20]}; 
                                       `OPCODE_STORE: imm_d = {{20{i_inst[31]}},i_inst[31:25],i_inst[11:7]};

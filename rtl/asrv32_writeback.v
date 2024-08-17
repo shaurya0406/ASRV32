@@ -29,7 +29,7 @@ module asrv32_writeback #(parameter PC_RESET = 32'h00_00_00_00) (
 );
     initial o_pc = PC_RESET;                    // Initialize PC to PC_RESET
 
-    /* Internal Wires for decoding opcode signals. */
+/* Internal Wires for decoding opcode signals. */
     wire opcode_rtype = i_opcode[`RTYPE];
     wire opcode_itype = i_opcode[`ITYPE];
     wire opcode_load = i_opcode[`LOAD];
@@ -42,14 +42,14 @@ module asrv32_writeback #(parameter PC_RESET = 32'h00_00_00_00) (
     wire opcode_system = i_opcode[`SYSTEM];
     wire opcode_fence = i_opcode[`FENCE];
 
-    /* Intermediate Registers */
+/* Intermediate Registers */
     reg[31:0] rd_d;     // Intermediate register for destination register data
     reg[31:0] pc_d;     // Intermediate register for PC
     reg wr_rd_d;        // Intermediate register for write enable signal
     reg[31:0] a;        // Intermediate registers for PC calculations
     wire[31:0] sum;     // Intermediate Signal for ALU calculations 
 
-    /* Combinational Logic for Writeback Stage */
+/* Combinational Logic for Writeback Stage */
 
     assign sum = a + i_imm; // Share adder for all addition operation for less resource utilization (Non Blocking Combinational Logic)   
 
@@ -94,7 +94,7 @@ module asrv32_writeback #(parameter PC_RESET = 32'h00_00_00_00) (
         end    
     end
 
-    /* Register outputs of this module for shorter combinational timing paths */
+/* Register outputs of this module for shorter combinational timing paths */
     always @(posedge i_clk,negedge i_rst_n) begin
         if(!i_rst_n) begin
             o_rd <= 0; 

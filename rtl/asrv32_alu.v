@@ -17,17 +17,17 @@ module asrv32_alu
         output reg[31:0] o_alu_result       // Result of arithmetic operation by ALU
     );
 
-    /* For Testbench */
+/* For Testbench */
     initial begin
         o_alu_result = 0;
     end
 
-    /* Intermediate Register Declaration: */
+/* Intermediate Register Declaration: */
     reg[31:0] y_d;  // Store ALU Result
     reg[31:0] a;    // Store Operand 1
     reg[31:0] b;    // Store Operand 2
 
-    /* Internal Parallel Wires for less resource utilisation */
+/* Internal Parallel Wires for less resource utilisation */
     wire alu_add = i_alu[`ADD];
     wire alu_sub = i_alu[`SUB];
     wire alu_slt = i_alu[`SLT];
@@ -43,7 +43,7 @@ module asrv32_alu
     wire alu_ge = i_alu[`GE];
     wire alu_geu = i_alu[`GEU];
 
-    /* ALU Core Combinational Logic (Blocking Code): */
+/* ALU Core Combinational Logic (Blocking Code): */
     always @* begin  
         y_d = 0;                        // Default value of intermediate register y_d
         a = i_op1;
@@ -71,7 +71,7 @@ module asrv32_alu
         end
     end
 
-    /* Register the ALU Output */
+/* Register the ALU Output */
     always @(posedge i_clk, negedge i_rst_n) begin
         if(!i_rst_n) o_alu_result <= 0;                           // Reset output to 0 when reset is active (deasserted)
         else o_alu_result <= i_alu_en ? y_d : o_alu_result;     // Update ALU output if ALU stage (Execute stage) is active, else previous result i.e. keep it constant
