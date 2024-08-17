@@ -13,4 +13,6 @@ Extra Logic in FSM Module:
 
 ### TODO
 - :white_check_mark: Move Operand selection from FSM to ALU
-- :black_square_button: Add a Fetch Module
+- :white_check_mark: Add a Fetch Module
+
+We are now ready to remove FSM Module as our dependencies are over, the Fetch module will work for most testcases but we have to meet timing which can be taken care later. Misalligned instruction fetch will fail as of now.

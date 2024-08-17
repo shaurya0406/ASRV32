@@ -32,6 +32,9 @@ module asrv32_core #(parameter PC_RESET = 32'h00_00_00_00, CLK_FREQ_MHZ = 100, T
     input wire[63:0] i_mtimecmp_din //data to be written to mtimecmp
 );
 
+    // wires for Fetch
+    wire[31:0] inst_q;
+
     //wires for basereg
     wire[31:0] rs1_data, rs2_data, rd_data; //value of source register 1 and 2 and destination register 
 
@@ -54,8 +57,9 @@ module asrv32_core #(parameter PC_RESET = 32'h00_00_00_00, CLK_FREQ_MHZ = 100, T
     wire wr_rd_en; //write to rd if enabled
 
     //wires for asrv32_fsm
-    wire[31:0] inst_q;
+    // wire[31:0] inst_q;
     wire[2:0] stage_q;
+    wire fetch_stage_en;
     wire alu_stage_en;
     wire memoryaccess_stage_en;
     wire writeback_stage_en; 
@@ -86,6 +90,14 @@ module asrv32_core #(parameter PC_RESET = 32'h00_00_00_00, CLK_FREQ_MHZ = 100, T
         .i_rd_data(rd_data), //data to be written to destination register
         .o_rs1_data(rs1_data), //source register 1 value 
         .o_rs2_data(rs2_data) //source register 2 value 
+    );
+    
+    asrv32_fetch fetch(
+        .i_clk(i_clk),
+        .i_rst_n(i_rst_n),
+        .i_fetch_stage_en(fetch_stage_en),
+        .i_inst(i_inst),
+        .o_inst(inst_q)
     );
     
     asrv32_decoder m1( //logic for the decoding of the 32 bit instruction [DECODE STAGE]
@@ -158,16 +170,17 @@ module asrv32_core #(parameter PC_RESET = 32'h00_00_00_00, CLK_FREQ_MHZ = 100, T
     asrv32_fsm m5( //FSM controller for the fetch, decode, execute, memory access, and writeback processes.
         .i_clk(i_clk),
         .i_rst_n(i_rst_n),
-        .i_inst(i_inst), //instruction
+        // .i_inst(i_inst), //instruction
         .i_pc(pc), //Program Counter
         .i_rs1_data(rs1_data), //Source register 1 value
         .i_rs2_data(rs2_data), //Source Register 2 value
         .i_imm(imm), //Immediate value
         .i_opcode(opcode),
-        .o_inst_q(inst_q), //registered instruction
+        // .o_inst_q(inst_q), //registered instruction
         .o_stage_q(stage_q), //current stage
         .o_op1(op1), //value of op1 in ALU
         .o_op2(op2), //value of op2 in ALU
+        .o_fetch_stage_en(fetch_stage_en), // high if stage is on FETCH
         .o_alu_stage_en(alu_stage_en),//high if stage is on EXECUTE
         .o_memoryaccess_stage_en(memoryaccess_stage_en),//high if stage is on MEMORYACCESS
         .o_writeback_stage_en(writeback_stage_en), //high if stage is on WRITEBACK

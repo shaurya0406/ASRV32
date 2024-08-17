@@ -8,7 +8,7 @@ module asrv32_fsm (
     /* Inputs */
     input wire i_clk,                       // Clock input
     input wire i_rst_n,                     // Active-low reset input
-    input wire[31:0] i_inst,                // Instruction input
+    // input wire[31:0] i_inst,                // Instruction input
     input wire[31:0] i_pc,                  // Program Counter input
     input wire[31:0] i_rs1_data,            // Source register 1 value input
     input wire[31:0] i_rs2_data,            // Source register 2 value input
@@ -16,10 +16,11 @@ module asrv32_fsm (
     input wire[`OPCODE_WIDTH-1:0] i_opcode, // Opcode input
 
     /* Outputs */
-    output reg[31:0] o_inst_q,              // Registered instruction output
+    // output reg[31:0] o_inst_q,              // Registered instruction output
     output reg[2:0] o_stage_q,              // Current stage output
     output reg[31:0] o_op1,                 // ALU operand 1 output
     output reg[31:0] o_op2,                 // ALU operand 2 output
+    output wire o_fetch_stage_en,           // FETCH stage enable signal
     output wire o_alu_stage_en,             // ALU stage enable signal
     output wire o_memoryaccess_stage_en,    // Memory access stage enable signal
     output wire o_writeback_stage_en,       // Writeback stage enable signal
@@ -50,22 +51,22 @@ module asrv32_fsm (
 /* Initial Values for Stage and Instruction */
     initial begin
         o_stage_q = FETCH; // Initial stage is FETCH
-        o_inst_q = 0;      // Initial instruction is 0
+        // o_inst_q = 0;      // Initial instruction is 0
     end
     
     reg[2:0] stage_d;   // Next stage
-    reg[31:0] inst_d;   // Next instruction
+    // reg[31:0] inst_d;   // Next instruction
 
 /* FSM Logic for 5-stage processor (unpipelined) */  
     always @* begin
         stage_d = o_stage_q; // Default next stage is current stage
-        inst_d = o_inst_q;   // Default next instruction is current instruction
+        // inst_d = o_inst_q;   // Default next instruction is current instruction
         o_op1 = 0;           // Default ALU operand 1 is 0
         o_op2 = 0;           // Default ALU operand 2 is 0
         
         case(o_stage_q)
             FETCH:  begin // Fetch the instruction
-                            inst_d = i_inst;        // Capture the instruction
+                            // inst_d = i_inst;        // Capture the instruction
                             stage_d = DECODE;       // Move to Decode stage
                     end
 
@@ -89,15 +90,16 @@ module asrv32_fsm (
     always @(posedge i_clk, negedge i_rst_n) begin
         if(!i_rst_n) begin
             o_stage_q <= FETCH;     // Reset stage to Fetch
-            o_inst_q <= 0;          // Reset instruction to 0
+            // o_inst_q <= 0;          // Reset instruction to 0
         end
         else begin
             o_stage_q <= stage_d;   // Update current stage
-            o_inst_q <= inst_d;     // Update current instruction
+            // o_inst_q <= inst_d;     // Update current instruction
         end
     end
 
 /* Stage Enable Signals */
+    assign o_fetch_stage_en = o_stage_q == FETCH;                       // FETCH stage enable
     assign o_alu_stage_en = o_stage_q == EXECUTE;                       // ALU stage enable
     assign o_memoryaccess_stage_en = o_stage_q == MEMORYACCESS;         // Memory access stage enable
     assign o_writeback_stage_en = o_stage_q == WRITEBACK;               // Writeback stage enable
