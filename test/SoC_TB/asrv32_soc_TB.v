@@ -110,10 +110,8 @@ module asrv32_soc_TB;
 
         if(uut.m0.m0.base_regfile[17] == 32'h5d) begin //Exit test using RISC-V International's riscv-tests pass/fail criteria
                 if(uut.m0.m0.base_regfile[10] == 0)
-                    // $display("\nPASS: exit code = 0x%h\n",uut.m0.m0.base_regfile[10]>>1);
                     $display("\nPASS: exit code = 0x%h \n[%0d instructions in %0d clk cycles]\n",uut.m0.m0.base_regfile[10]>>1,uut.m0.m6.minstret,uut.m0.m6.mcycle);
                 else begin
-                    // $display("\nFAIL: exit code = 0x%h\n",uut.m0.m0.base_regfile[10]>>1);
                     $display("\nFAIL: exit code = 0x%h \n[%0d instructions in %0d clk cycles]\n",uut.m0.m0.base_regfile[10]>>1,uut.m0.m6.minstret,uut.m0.m6.mcycle);
                 end
             end
