@@ -3,6 +3,7 @@ import subprocess   # Import subprocess module to run external commands
 import argparse     # Import argparse module for command-line argument parsing
 import glob         # Import glob module for file pattern matching
 import shutil       # Import shutil to remove directories and their contents recursively
+import re           # Import Regex to match rules and expressions
 
 ## GLobal Counters ##
 countfile=0     # stores total number of testfiles
@@ -109,12 +110,18 @@ def simulate_verilog(top_module, output_file, specific_testfile = None):
             # print(simulation_process.stdout)  # Print simulation output
             print(simulation_process.stderr)  # Print simulation errors
 
+            # Use a regular expression to search for the specific line containing clk cycle count
+            clk_cycle = re.search(r'\[\d+ instructions in \d+ clk cycles\]', simulation_process.stdout)
+
             if "PASS: exit code = 0x00000000" in simulation_process.stdout:
                 countpassed += 1
-                print(f"\nPASSED: {os.path.basename(specific_testfile)}\n")
+                print(f"\nPASSED: {os.path.basename(specific_testfile)}")
+                print(clk_cycle.group())
             elif "FAIL" in simulation_process.stdout:
                 countfailed += 1
                 failedlist += f"{os.path.basename(specific_testfile)}\n"
+                print(f"\FAILED: {os.path.basename(specific_testfile)}")
+                print(clk_cycle.group())
             elif "UNKNOWN" in simulation_process.stdout:
                 countunknown += 1
                 filename = os.path.basename(os.path.basename(specific_testfile))
