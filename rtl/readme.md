@@ -1,6 +1,16 @@
 # Converting FSM to Pipeline
 
 This readme file acts as a step-by-step guide on how to change the FSM based SoC `Release v1.0.0` to a Pipelined Architecture.
+
+## Overview
+Pipelining is a technique used to increase the throughput of a processor by overlapping the execution of multiple instructions. The 5-stage pipelined processor for a RISC-V design consists of the following stages:
+
+- Instruction Fetch (IF): Fetches the next instruction from memory.
+- Instruction Decode (ID): Decodes the instruction and fetches operands from registers.
+- Execute (EX): Performs arithmetic or logical operations.
+- Memory Access (MEM): Accesses data memory for load and store instructions.
+- Writeback (WB): Writes the results back to the register file.
+
 ## Removing FSM Module
 The first step is to remove all the dependencies from the FSM Module so that we can remove it later.
 If we look at the FSM Logic, it does the following:
@@ -16,3 +26,55 @@ Extra Logic in FSM Module:
 - :white_check_mark: Add a Fetch Module
 
 We are now ready to remove FSM Module as our dependencies are over, the Fetch module will work for most testcases but we have to meet timing which can be taken care later. Misalligned instruction fetch will fail as of now.
+
+## Thought Process
+The main goal is to have multiple instructions in different stages of execution simultaneously. This increases the utilization of the CPU’s resources and improves performance.
+
+To convert the FSM-based design to a 5-stage pipelined processor, the following overview and thought process can be considered:
+
+### Overview
+
+Pipelining is a technique used to increase the throughput of a processor by overlapping the execution of multiple instructions. The 5-stage pipelined processor for a RISC-V design consists of the following stages:
+
+1. **Instruction Fetch (IF)**: Fetches the next instruction from memory.
+2. **Instruction Decode (ID)**: Decodes the instruction and fetches operands from registers.
+3. **Execute (EX)**: Performs arithmetic or logical operations.
+4. **Memory Access (MEM)**: Accesses data memory for load and store instructions.
+5. **Writeback (WB)**: Writes the results back to the register file.
+
+### Thought Process
+
+The main goal is to have multiple instructions in different stages of execution simultaneously. This increases the utilization of the CPU’s resources and improves performance.
+
+**Key Considerations:**
+
+1. **Pipeline Registers**: Introduce pipeline registers between each stage to hold the intermediate data and control signals. This allows each stage to process a different instruction simultaneously.
+
+2. **Hazard Detection and Handling**:
+   - **Data Hazards**: Occur when instructions depend on the results of previous instructions. Techniques like forwarding and stalling are used to handle these hazards.
+   - **Control Hazards**: Occur during branch instructions.
+
+3. **Structural Hazards**: Ensuring that there are no resource conflicts by implementing dual-port memory.
+
+4. **Control Logic**: Modify the control logic to account for the fact that multiple instructions are in different stages of execution. This includes adjusting the enable signals for each stage and handling hazards.
+
+### Changes Required
+
+**1. Pipeline Registers:**
+   - Add registers between each pair of pipeline stages to store instructions, operands, control signals, and results.
+
+**2. Control Logic:**
+   - Adjust the control unit to generate control signals that pass through the pipeline stages and handle any hazards.
+   - Implement a hazard detection unit that can introduce stalls or flush the pipeline when necessary.
+
+**3. Forwarding and Stalling:**
+   - Introduce forwarding logic to bypass data from one pipeline stage to another when it’s needed earlier than the regular writeback.
+   - Implement stalling logic to pause the pipeline if an instruction is dependent on the result of a previous instruction that has not yet been computed.
+
+**4. Branch Prediction: (Optional)**
+   - Add a branch prediction mechanism to predict the outcome of branches and reduce the number of stalls due to control hazards.
+
+**5. Instruction and Data Memory Access:**
+   - Ensure the memory system supports concurrent access if using separate instruction and data memories or implement dual-port memory access.
+
+By incorporating these changes, the FSM-based design can be transformed into an efficient 5-stage pipelined processor, significantly enhancing the performance by increasing instruction throughput while managing potential hazards effectively.
