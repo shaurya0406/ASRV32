@@ -14,6 +14,7 @@ module asrv32_fetch #(parameter PC_RESET = 32'h00_00_00_00) (
     input wire[31:0] i_inst,        // Input Instruction received from memory
     input wire i_ack_inst,          // Wishbone Bus Acknowledge Signal (Asserted if new instruction is now on the bus)
 
+    /* Decoder */
     output wire[31:0] o_inst_ifid,  // Current Instruction sent to the next stage of the pipeline (IF/ID Pipeline Register)
     output reg[31:0] o_pc_ifid,     // Current Instruction PC Value (IF/ID Pipeline Register)
 
