@@ -254,6 +254,16 @@ module asrv32_decoder
                     o_exception_idex[`MRET] <= (system_noncsr && i_inst_ifid[21:20]==2'b10)? 1:0;
                     /***************************************************************************/
                 end
+                
+                if(i_flush && !stall_bit) begin // Flush this stage so clock-enable of next stage is disabled at next clock cycle
+                    o_ce <= 0;
+                end
+                else if(!stall_bit) begin // clock-enable will change only when not stalled
+                    o_ce <= i_ce;
+                end
+                else if(stall_bit && !i_stall) begin // if this stage is stalled but next stage is not, disable clock enable of next stage at next clock cycle (pipeline bubble)
+                    o_ce <= 0;
+                end
             end
         end
 endmodule
