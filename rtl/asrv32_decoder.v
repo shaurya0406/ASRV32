@@ -76,7 +76,7 @@ module asrv32_decoder
     reg valid_opcode = 0;
     reg illegal_shift = 0;
 
-/* Stall Logic for this stage (IF) */
+/* Stall Logic for this stage (ID) */
     wire stall_bit = o_stall || i_stall; //stall this stage when next stages are stalled
 
 /* Functionality Outline: */
