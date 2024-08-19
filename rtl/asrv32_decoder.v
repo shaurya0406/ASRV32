@@ -202,41 +202,7 @@ module asrv32_decoder
 
     always @(posedge i_clk, negedge i_rst_n) begin
             if(!i_rst_n) begin
-                o_funct3   <= 0;
-                o_imm      <= 0; 
-                /// Opcode Type ///
-                o_opcode[`RTYPE]  <= 0;
-                o_opcode[`ITYPE]  <= 0;
-                o_opcode[`LOAD]   <= 0;
-                o_opcode[`STORE]  <= 0;
-                o_opcode[`BRANCH] <= 0;
-                o_opcode[`JAL]    <= 0;
-                o_opcode[`JALR]   <= 0;
-                o_opcode[`LUI]    <= 0;
-                o_opcode[`AUIPC]  <= 0;
-                o_opcode[`SYSTEM] <= 0;
-                o_opcode[`FENCE]  <= 0;
-                /// ALU Operation ///
-                o_alu_op[`ADD]  <= 0;
-                o_alu_op[`SUB]  <= 0;
-                o_alu_op[`SLT]  <= 0;
-                o_alu_op[`SLTU] <= 0;
-                o_alu_op[`XOR]  <= 0;
-                o_alu_op[`OR]   <= 0;
-                o_alu_op[`AND]  <= 0;
-                o_alu_op[`SLL]  <= 0;
-                o_alu_op[`SRL]  <= 0;
-                o_alu_op[`SRA]  <= 0;
-                o_alu_op[`EQ]   <= 0;
-                o_alu_op[`NEQ]  <= 0;
-                o_alu_op[`GE]   <= 0;
-                o_alu_op[`GEU]  <= 0;
-                /// Exceptions ///
-                o_exception[`ILLEGAL]   <= 0;
-                o_exception[`ECALL]     <= 0;
-                o_exception[`EBREAK]    <= 0;
-                o_exception[`MRET]      <= 0;
-                
+                o_ce <= 0;
             end
             else begin
                 o_funct3    <= funct3_d;
