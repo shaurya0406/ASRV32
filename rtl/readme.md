@@ -30,18 +30,6 @@ We are now ready to remove FSM Module as our dependencies are over, the Fetch mo
 ## Thought Process
 The main goal is to have multiple instructions in different stages of execution simultaneously. This increases the utilization of the CPU’s resources and improves performance.
 
-To convert the FSM-based design to a 5-stage pipelined processor, the following overview and thought process can be considered:
-
-### Overview
-
-Pipelining is a technique used to increase the throughput of a processor by overlapping the execution of multiple instructions. The 5-stage pipelined processor for a RISC-V design consists of the following stages:
-
-1. **Instruction Fetch (IF)**: Fetches the next instruction from memory.
-2. **Instruction Decode (ID)**: Decodes the instruction and fetches operands from registers.
-3. **Execute (EX)**: Performs arithmetic or logical operations.
-4. **Memory Access (MEM)**: Accesses data memory for load and store instructions.
-5. **Writeback (WB)**: Writes the results back to the register file.
-
 ### Thought Process
 
 The main goal is to have multiple instructions in different stages of execution simultaneously. This increases the utilization of the CPU’s resources and improves performance.
@@ -78,3 +66,118 @@ The main goal is to have multiple instructions in different stages of execution 
    - Ensure the memory system supports concurrent access if using separate instruction and data memories or implement dual-port memory access.
 
 By incorporating these changes, the FSM-based design can be transformed into an efficient 5-stage pipelined processor, significantly enhancing the performance by increasing instruction throughput while managing potential hazards effectively.
+
+## FETCH Stage (IF)
+
+To convert FSM-based RISC-V processor design to a pipelined design, the fetch module will now take on several additional responsibilities, specifically related to pipeline control. Here's how the functionalities change and what logic is shifted to the fetch stage:
+
+### 1. **Program Counter (PC) Management**
+   - **FSM:** Previously, PC management was distributed across different FSM states, updating the PC based on the current state and instruction type.
+   - **Pipeline:** In a pipelined design, the Fetch stage continuously updates the PC, fetching a new instruction on every clock cycle. The PC increment or update logic now resides in the fetch module, handling branches, jumps, and traps more dynamically.
+
+### 2. **Instruction Fetching**
+   - **FSM:** Instruction fetching was explicitly tied to the FETCH state and triggered by the FSM's progression through states.
+   - **Pipeline:** The fetch module now continuously requests instructions based on the current PC, with logic to handle stalls and pipeline hazards. The fetched instruction is immediately sent down the pipeline.
+   
+### 3. **Pipeline Control**
+   - **FSM:** Control signals were simpler, as each state in the FSM determined the flow. No need to handle multiple instructions in-flight.
+   - **Pipeline:** Fetch must now handle stalling and flushing, ensuring the pipeline stages remain synchronized. The logic for stalling the fetch stage or introducing bubbles in case of hazards moves from the control logic to the fetch stage.
+
+### 4. **PC Control Logic**
+   - **FSM:** PC updates for branch/jump instructions occurred in the EXECUTE or MEMORY stages, depending on the design.
+   - **Pipeline:** This logic is now part of the fetch stage, which is responsible for updating the PC before the instruction is fetched. The fetch stage uses inputs from later stages (e.g., ALU results for branches and Interrupt/Trap based PC Update by WB Stage) to determine the next PC value.
+
+### 5. **Handling Stalls and Flushes**
+   - **FSM:** The FSM managed stalls by pausing the state progression using enable signals.
+   - **Pipeline:** In a pipelined design, the fetch stage must actively manage stalls and flushes. This involves not only stopping the PC but also ensuring that no new instructions are fetched and that the pipeline is correctly synchronized after a flush.
+
+This shift in responsibilities is necessary to maintain a smooth pipeline operation and ensure that each stage has the correct inputs for processing the instruction.
+
+### Verilog Insights
+When updating your Fetch module to transition from an FSM-based design to a pipelined design, it's important to follow best practices in Verilog coding to ensure your module is efficient, maintainable, and free of common issues. Here are some key considerations:
+
+#### 1. **Modular Design**
+   - **Separation of Concerns:** Keep the Fetch module focused on its core responsibilities—PC management, instruction fetching, and pipeline control. Avoid mixing concerns from other pipeline stages.
+   - **Parameterization:** Use parameters (like `PC_RESET`) to make the module flexible and adaptable to different configurations.
+
+   ```verilog
+   module asrv32_fetch #(parameter PC_RESET = 32'h0000_0000) (
+       input wire clk,
+       input wire rst_n,
+       ...
+   );
+   ```
+#### 2. **Pipeline Registers**
+   - In a Pipeline, there should be transparency between the stages, hence relevant data and signals should propoagte in the pipeline.
+   - Inputs connecting to previous stage data should be of `wire` datatype and outputs should be registered (`reg` datatype) so that data is available to the next stage in the next clock cycle (FlipFlop Operation).
+   - **Global Clock Enable:** This signal will maintain the entire operation of the pipeline and each stage will decide whenther to enable the next stage or not.
+   - **Instruction** Whatever instruction received from the memory, pass it on to the decode stage
+
+#### 3. **Avoiding Latches**
+   - **Combinational Logic:** Ensure all combinational logic is fully specified to avoid unintended latches, which can lead to simulation/synthesis mismatches.
+   - **Default Assignments:** Always assign default values to output signals to prevent inferred latches.
+
+   ```verilog
+   always @* begin
+       next_pc = pc + 4;
+       o_ce = 1'b1;
+       if (stall_fetch) begin
+           o_ce = 1'b0;
+           next_pc = pc; // Hold the PC
+       end else if (flush) begin
+           o_ce = 1'b0;
+           next_pc = flush_target; // Set PC to flush target
+       end
+       ...
+   end
+   ```
+
+#### 4. **Pipeline Control Signals**
+   - **Stall and Flush Handling:** Ensure that stall and flush conditions are properly handled, with clear and concise logic that avoids race conditions or deadlocks.
+   - **Pipeline Bubble Management:** Carefully manage the insertion of pipeline bubbles, ensuring they are correctly propagated through the stages.
+
+   ```verilog
+   always @* begin
+       stall_fetch = i_stall || !i_ack_inst;
+       if (branch_taken || jump) begin
+           flush = 1'b1;
+       end else begin
+           flush = 1'b0;
+       end
+   end
+   ```
+
+#### 5. **Resource Sharing**
+   - **Reuse Logic:** When possible, share common logic or resources between stages to save area and improve efficiency, but ensure it doesn't introduce hazards or timing issues.
+   - **MUXes for PC Selection:** Use multiplexers for PC updates to handle branches, jumps, and regular sequential execution in a clear and resource-efficient manner.
+
+   ```verilog
+   always @* begin
+       case (pc_select)
+           2'b00: next_pc = pc + 4;
+           2'b01: next_pc = branch_target;
+           2'b10: next_pc = jump_target;
+           default: next_pc = pc + 4;
+       endcase
+   end
+   ```
+
+#### 6. **Timing and Performance**
+   - **Critical Path Minimization:** Be mindful of the critical path through the fetch stage and ensure that logic does not introduce excessive delays that could limit the clock speed.
+   - **Pipeline Registers:** Properly register outputs to synchronize with other pipeline stages and minimize setup/hold violations.
+
+   ```verilog
+   always @(posedge clk) begin
+       if (!rst_n) begin
+           o_inst <= 32'b0;
+       end else if (o_ce) begin
+           o_inst <= fetched_inst;
+       end
+   end
+   ```
+### Understanding Fetch Operation
+1. On Bootup, reset button is released and the Fetch module will strobe/request for an instruction at the PC_RESET address from the memory via the Wishbone Interface and will enable the clock for the IF Stage.
+2. Lets assume, our memory takes 1 clock cycle to give us the instruction and then asserts the acknowledement signal on the wishbone Interface. During this clock cycle, our Fetch module's stall bit will be high so that we dont forward the unknown instruction at our input port to the next stage.
+3. Now that the Fetch module has received acknowldegment, we will release the stall bit and proceed with forwarding the input instruction to the output. But the output clock enable for next stages is still not high. It will become high in the next clock cycle as its a registered output. This clock cycle is utilised for combinational logic of PC Control.
+4. Now in the next clk cycle, the output clock is enabled for the next stages, so for the very first instruction, the output instruction will remain constant for 2 clk cycles (1 extra clock cycle becuase of delay from memory). It appears as a bubble in the pipeline.
+5. But henceforth there will be no such bubbles unless ther is change of pc by the EX or WB Stages.
