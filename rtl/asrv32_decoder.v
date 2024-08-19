@@ -176,13 +176,13 @@ module asrv32_decoder
         end
 
         else alu_add_d = 1'b1; //add operation for all remaining instructions 
-    end
+    // ! end
 
 /* Immediate Value Extraction:
 - Depending on the instruction type, the immediate value is extracted and sign-extended. This immediate value can be used in arithmetic operations, load/store instructions, or as an offset for branches and jumps.
 */
 
-    always @(*) begin
+    // ! always @(*) begin
         imm_d = 0;
         case(opcode)
         `OPCODE_ITYPE , `OPCODE_LOAD , `OPCODE_JALR: imm_d = {{20{i_inst_ifid[31]}},i_inst_ifid[31:20]}; 
