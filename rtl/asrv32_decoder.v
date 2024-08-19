@@ -205,48 +205,55 @@ module asrv32_decoder
                 o_ce <= 0;
             end
             else begin
-                o_funct3    <= funct3_d;
-                o_imm       <= imm_d;
-                /// Opcode Type ///
-                o_opcode[`RTYPE]  <= opcode_rtype_d;
-                o_opcode[`ITYPE]  <= opcode_itype_d;
-                o_opcode[`LOAD]   <= opcode_load_d;
-                o_opcode[`STORE]  <= opcode_store_d;
-                o_opcode[`BRANCH] <= opcode_branch_d;
-                o_opcode[`JAL]    <= opcode_jal_d;
-                o_opcode[`JALR]   <= opcode_jalr_d;
-                o_opcode[`LUI]    <= opcode_lui_d;
-                o_opcode[`AUIPC]  <= opcode_auipc_d;
-                o_opcode[`SYSTEM] <= opcode_system_d;
-                o_opcode[`FENCE]  <= opcode_fence_d;
-                /// ALU Operations ///
-                o_alu_op[`ADD]  <= alu_add_d;
-                o_alu_op[`SUB]  <= alu_sub_d;
-                o_alu_op[`SLT]  <= alu_slt_d;
-                o_alu_op[`SLTU] <= alu_sltu_d;
-                o_alu_op[`XOR]  <= alu_xor_d;
-                o_alu_op[`OR]   <= alu_or_d; 
-                o_alu_op[`AND]  <= alu_and_d;
-                o_alu_op[`SLL]  <= alu_sll_d; 
-                o_alu_op[`SRL]  <= alu_srl_d;
-                o_alu_op[`SRA]  <= alu_sra_d;
-                o_alu_op[`EQ]   <= alu_eq_d; 
-                o_alu_op[`NEQ]  <= alu_neq_d;
-                o_alu_op[`GE]   <= alu_ge_d; 
-                o_alu_op[`GEU]  <= alu_geu_d;
+                if(i_ce && !stall_bit) begin  // Update registers iff this stage is enabled and pipeline is not stalled
+                    /// Pipeline Registers ///
+                    o_pc_idex       <= i_pc_ifid;
+                    o_rs1_addr_idex <= o_rs1_addr;
+                    o_rs2_addr_idex <= o_rs2_addr;
+                    o_rd_addr_idex  <= i_inst_ifid[11:7];
+                    o_funct3_idex   <= funct3_d;
+                    o_imm_idex      <= imm_d;
+                    /// Opcode Type ///
+                    o_opcode_idex[`RTYPE]  <= opcode_rtype_d;
+                    o_opcode_idex[`ITYPE]  <= opcode_itype_d;
+                    o_opcode_idex[`LOAD]   <= opcode_load_d;
+                    o_opcode_idex[`STORE]  <= opcode_store_d;
+                    o_opcode_idex[`BRANCH] <= opcode_branch_d;
+                    o_opcode_idex[`JAL]    <= opcode_jal_d;
+                    o_opcode_idex[`JALR]   <= opcode_jalr_d;
+                    o_opcode_idex[`LUI]    <= opcode_lui_d;
+                    o_opcode_idex[`AUIPC]  <= opcode_auipc_d;
+                    o_opcode_idex[`SYSTEM] <= opcode_system_d;
+                    o_opcode_idex[`FENCE]  <= opcode_fence_d;
+                    /// ALU Operations ///
+                    o_alu_op_idex[`ADD]  <= alu_add_d;
+                    o_alu_op_idex[`SUB]  <= alu_sub_d;
+                    o_alu_op_idex[`SLT]  <= alu_slt_d;
+                    o_alu_op_idex[`SLTU] <= alu_sltu_d;
+                    o_alu_op_idex[`XOR]  <= alu_xor_d;
+                    o_alu_op_idex[`OR]   <= alu_or_d; 
+                    o_alu_op_idex[`AND]  <= alu_and_d;
+                    o_alu_op_idex[`SLL]  <= alu_sll_d; 
+                    o_alu_op_idex[`SRL]  <= alu_srl_d;
+                    o_alu_op_idex[`SRA]  <= alu_sra_d;
+                    o_alu_op_idex[`EQ]   <= alu_eq_d; 
+                    o_alu_op_idex[`NEQ]  <= alu_neq_d;
+                    o_alu_op_idex[`GE]   <= alu_ge_d; 
+                    o_alu_op_idex[`GEU]  <= alu_geu_d;
 
-                /*********************** decode possible exceptions ***********************/
-                o_exception[`ILLEGAL] <= !valid_opcode || illegal_shift;
+                    /*********************** decode possible exceptions ***********************/
+                    o_exception_idex[`ILLEGAL] <= !valid_opcode || illegal_shift;
 
-                // Check if ECALL
-                o_exception[`ECALL] <= (system_noncsr && i_inst_ifid[21:20]==2'b00)? 1:0;
-                
-                // Check if EBREAK
-                o_exception[`EBREAK] <= (system_noncsr && i_inst_ifid[21:20]==2'b01)? 1:0;
-                
-                // Check if MRET
-                o_exception[`MRET] <= (system_noncsr && i_inst_ifid[21:20]==2'b10)? 1:0;
-                /***************************************************************************/
+                    // Check if ECALL
+                    o_exception_idex[`ECALL] <= (system_noncsr && i_inst_ifid[21:20]==2'b00)? 1:0;
+                    
+                    // Check if EBREAK
+                    o_exception_idex[`EBREAK] <= (system_noncsr && i_inst_ifid[21:20]==2'b01)? 1:0;
+                    
+                    // Check if MRET
+                    o_exception_idex[`MRET] <= (system_noncsr && i_inst_ifid[21:20]==2'b10)? 1:0;
+                    /***************************************************************************/
+                end
             end
         end
 endmodule
