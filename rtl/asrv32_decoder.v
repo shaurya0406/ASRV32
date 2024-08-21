@@ -38,7 +38,7 @@ module asrv32_decoder
         input wire i_stall, // Global Stall logic for whole pipeline to stall this stage
         output reg o_stall, // Global Stall logic for whole pipeline to stall prev stages
         input wire i_flush, // Flush this stage
-        input reg o_flush   // Flush prev stages
+        output reg o_flush   // Flush prev stages
 
     );
 
