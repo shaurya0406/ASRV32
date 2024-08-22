@@ -57,6 +57,9 @@ module asrv32_memoryaccess(
     // Extract the last 2 bits of the address from the ALU result for byte/half-word addressing
     wire[1:0] addr_2 = i_result_from_alu_exmem[1:0]; // Last 2 bits of data memory address
 
+/* Stall Logic for this stage (MEM) */
+    wire stall_bit = i_stall || o_stall;
+
 /* Data Load/Store Logic: */
 
     // Determine data to be loaded to base register or stored to data memory 
