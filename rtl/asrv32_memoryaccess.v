@@ -64,6 +64,13 @@ module asrv32_memoryaccess(
 
     // Determine data to be loaded to base register or stored to data memory 
     always @* begin
+        /*
+        ? stall while data memory has not yet acknowledged i.e.wWrite data is not yet written or
+        ? read data is not yet available. Don't stall when need to flush by next stage
+        */
+        o_stall = ((i_stall_from_alu && i_ce && !i_ack_data) || i_stall) && !i_flush;         
+        o_flush = i_flush; //flush this stage along with previous stages
+        
         store_data_d = 0;
         load_data_d = 0;
         wr_mask_d = 0; 
