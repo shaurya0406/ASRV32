@@ -104,18 +104,79 @@ module asrv32_memoryaccess(
 
 /* Register the outputs of this module */
     always @(posedge i_clk or negedge i_rst_n) begin
+        // Asynchronous reset: Initialize outputs to default values when reset is active
         if (!i_rst_n) begin
-            o_store_data <= 0;
-            o_load_data <= 0;
-            o_wr_mask <= 0;
-            o_wr_mem_en <= 0;
+            o_ce <= 0;               // Clock enable for the next stage
+            o_wr_rd <= 0;            // Write enable for the destination register
+            o_wr_mem_en <= 0;        // Write enable for memory operations
+            o_stb_data <= 0;         // Data strobe signal for load/store operations
         end
         else begin
-            o_store_data <= store_data_d;
-            o_load_data <= load_data_d;
-            o_wr_mask <= wr_mask_d;
-            o_wr_mem_en <= i_opcode_exmem[`STORE] && i_memoryaccess_en; 
+            /* 
+            * Update registers only if the current stage is enabled (i_ce) and not stalled (stall_bit).
+            * This section handles normal pipeline operation where the pipeline registers
+            * are updated based on the inputs from the previous stage.
+            */
+            if(i_ce && !stall_bit) begin
+                o_rd_addr <= i_rd_addr;                 // Update destination register address
+                o_funct3_memwb <= i_funct3_exmem;       // Update funct3 code for memory-writeback stage
+                o_opcode_memwb <= i_opcode_exmem;       // Update opcode for memory-writeback stage
+                o_pc_memwb <= i_pc_exmem;               // Update the program counter for the memory-writeback stage
+                o_wr_rd <= i_wr_rd;                     // Update write enable signal for the destination register
+                o_rd <= i_rd;                           // Update the data to be written to the destination register
+                o_load_data <= load_data_d;             // Update load data for memory operations
+                o_wr_mask <= 0;                         // Reset write mask signal
+                o_wr_mem_en <= 0;                       // Reset memory write enable signal
+                o_stb_data <= 0;                        // Reset data strobe signal
+            end
+            /* 
+            * Handle the case when the stage is enabled (i_ce) but stalled (stall_bit).
+            * In this case, maintain or modify specific control signals related to memory
+            * operations, such as data strobe (o_stb_data), write mask (o_wr_mask), and 
+            * memory write enable (o_wr_mem_en).
+            */
+            else if(i_ce) begin
+                // Data strobe signal goes high for one clock cycle if the instruction is a load/store
+                // and the request is not already high
+                o_stb_data <= (o_stb_data && stall_bit)? 0 : i_opcode_exmem[`LOAD] || i_opcode_exmem[`STORE]; 
+                
+                // Update write mask based on data strobe signal
+                o_wr_mask <= o_stb_data ? 0 : wr_mask_d;
+                
+                // Update memory write enable signal based on data strobe and opcode
+                o_wr_mem_en <= o_stb_data ? 0 : i_opcode_exmem[`STORE]; 
+            end
+
+            /*
+            * Update certain registers even when the stage is stalled, as they are
+            * used for accessing the data memory during the stall.
+            */
+            o_result_from_alu_memwb <= i_result_from_alu_exmem; // Update memory address from ALU result
+            o_store_data <= store_data_d;                       // Update store data signal
+
+            /*
+            * Handle flush signal (i_flush): When a flush is requested and the stage
+            * is not stalled, disable the clock enable (o_ce) and memory write enable
+            * (o_wr_mem_en) signals to clear the current stage.
+            */
+            if(i_flush && !stall_bit) begin
+                o_ce <= 0;              // Disable clock enable signal to flush the stage
+                o_wr_mem_en <= 0;       // Disable memory write enable signal
+            end
+            /*
+            * If the stage is not stalled, update the clock enable (o_ce) signal based on the input (i_ce).
+            */
+            else if(!stall_bit) begin
+                o_ce <= i_ce;           // Update clock enable signal
+            end
+            /*
+            * If the stage is stalled (stall_bit) but the next stage is not (i_stall is low),
+            * introduce a pipeline bubble by disabling the clock enable (o_ce) for the next stage.
+            */
+            else if(stall_bit && !i_stall) begin
+                o_ce <= 0;              // Introduce a pipeline bubble by disabling the clock enable
+            end
         end
-    end 
+    end
 
 endmodule
