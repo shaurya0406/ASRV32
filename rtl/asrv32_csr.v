@@ -589,11 +589,11 @@ module asrv32_csr #(parameter CLK_FREQ_MHZ = 100, TRAP_ADDRESS = 0) (
                 mcountinhibit_ir <= csr_in[2];
             end
         end
-    end
+    // ! end
 
 /* Register the Outputs */
 
-    always @(posedge i_clk, negedge i_rst_n) begin
+    // ! always @(posedge i_clk, negedge i_rst_n) begin
         // CSR Output
         o_csr_out <= csr_enable? csr_data: o_csr_out; //registered output for o_csr_out        
         // Trap Handler Outputs
