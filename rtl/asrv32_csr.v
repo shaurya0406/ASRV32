@@ -8,7 +8,7 @@ module asrv32_csr #(parameter CLK_FREQ_MHZ = 100, TRAP_ADDRESS = 0) (
 
     /* Inputs */
     input wire i_clk, i_rst_n,
-    input wire i_csr_stage_en, // Enable csr read/write iff stage is currently on MEMORYACCESS
+    // ! input wire i_csr_stage_en, // Enable csr read/write iff stage is currently on MEMORYACCESS
 
     // Interrupts //
     input wire i_external_interrupt, // External Interrupt
@@ -95,7 +95,7 @@ module asrv32_csr #(parameter CLK_FREQ_MHZ = 100, TRAP_ADDRESS = 0) (
                 MINSTRETH     = 12'hBB2, // Upper 32 bits of minstret, RV32 only.
 
                 //Machine Counter Setup
-                MCOUNTINHIBIT = 12'h320, // Machine counter-inhibit register.
+                MCOUNTINHIBIT = 12'h320; // Machine counter-inhibit register.
 
                 // TODO: Memory Mapped Timer | Moving to top SoC
                 // // Unprivileged Counter/Timers
@@ -139,7 +139,7 @@ module asrv32_csr #(parameter CLK_FREQ_MHZ = 100, TRAP_ADDRESS = 0) (
     wire opcode_jalr    = i_opcode[`JALR];
     wire opcode_system  = i_opcode[`SYSTEM];
 
-    wire csr_enable = opcode_system && i_funct3!=0 && i_csr_stage_en; // CSR operation is enabled only at this conditions
+    wire csr_enable = opcode_system && i_funct3!=0 && i_ce && !writeback_change_pc; // CSR operation is enabled only at this conditions
     reg[31:0] csr_in;   // Data to be stored to CSR
     reg[31:0] csr_data; // Data at current CSR address
 
@@ -162,7 +162,7 @@ module asrv32_csr #(parameter CLK_FREQ_MHZ = 100, TRAP_ADDRESS = 0) (
 
 /* Declare CSR Individual Register Bits */
     // ! Dont initialise the registers now, it should be done in the always block
-    reg mstatus;                // Machine Interrupt Enable
+    reg mstatus_mie;            // Machine Interrupt Enable
     reg mstatus_mpie;           // Machine Previous Interrupt Enable
     reg[1:0] mstatus_mpp = 2;   // MPP
 
@@ -195,6 +195,9 @@ module asrv32_csr #(parameter CLK_FREQ_MHZ = 100, TRAP_ADDRESS = 0) (
     
     reg mcountinhibit_cy; // Controls increment of mcycle
     reg mcountinhibit_ir; // Controls increment of minstret
+
+/* Stall Logic for this stage (CSR) */
+    wire stall_bit = i_stall;
 
 /* Combinational Logic for load/store/instruction misaligned exception detection */
 
@@ -323,13 +326,14 @@ module asrv32_csr #(parameter CLK_FREQ_MHZ = 100, TRAP_ADDRESS = 0) (
                                 csr_data = mcycle[63:32];
                             end
 
-            TIME:           begin // TIME (real-time i_clk [millisecond increment] [LOWER HALF])
-                                csr_data = mtime[31:0];  
-                            end
+            // TODO: Memory Mapped Timer | Moving to top SoC
+            // TIME:           begin // TIME (real-time i_clk [millisecond increment] [LOWER HALF])
+            //                     csr_data = mtime[31:0];  
+            //                 end
 
-            TIMEH:          begin // TIME (real-time i_clk [millisecond increment] [LOWER HALF])
-                                csr_data = mtime[63:32]; 
-                            end
+            // TIMEH:          begin // TIME (real-time i_clk [millisecond increment] [LOWER HALF])
+            //                     csr_data = mtime[63:32]; 
+            //                 end
 
             MINSTRET:       begin // MINSTRET (counts number instructions retired/executed by core [LOWER half])     
                                 csr_data = minstret[31:0];
@@ -393,11 +397,11 @@ module asrv32_csr #(parameter CLK_FREQ_MHZ = 100, TRAP_ADDRESS = 0) (
             mcountinhibit_ir <= 0;
             o_go_to_trap_q <= 0;
             o_return_from_trap_q <= 0;
-            o_return_address <= 0;
-            o_trap_address <= 0;
+            // ![CHECK] o_return_address <= 0;
+            // ![CHECK] o_trap_address <= 0;
         end
 
-        else begin
+        else if(!stall_bit) begin
 
             // MSTATUS (controls hart's current operating state (mie and mpie are the only configurable bits))
             if(i_csr_index == MSTATUS && csr_enable) begin 
@@ -458,7 +462,8 @@ module asrv32_csr #(parameter CLK_FREQ_MHZ = 100, TRAP_ADDRESS = 0) (
             ? Volume 2 pg. 38: When a trap is taken into M-mode, mepc is written with the virtual address of the 
             ? instruction that was interrupted or that encountered the exception 
             */
-            if(go_to_trap) mepc <= i_pc; 
+            // * Due to pipelining, we need to check current trap status (`o_go_to_trap_q`) as well for this given clk cycle
+            if(go_to_trap && !o_go_to_trap_q) mepc <= i_pc; 
             
             
             // MCAUSE (indicates cause of trap(either interrupt or exception))
@@ -470,7 +475,7 @@ module asrv32_csr #(parameter CLK_FREQ_MHZ = 100, TRAP_ADDRESS = 0) (
             ? Volume 2 pg. 38: When a trap is taken into M-mode, mcause is written with a code indicating the event that caused the trap 
             */
             // Interrupts have priority (external first, then s/w, then timer---[2] sec 3.1.9), then synchronous traps.
-            if(go_to_trap) begin
+            if(go_to_trap && !o_go_to_trap_q) begin // * Due to pipelining, we need to check current trap status (`o_go_to_trap_q`) as well for this given clk cycle
                 if(external_interrupt_pending) begin 
                     mcause_code <= MACHINE_EXTERNAL_INTERRUPT; 
                     mcause_intbit <= 1;
@@ -519,7 +524,7 @@ module asrv32_csr #(parameter CLK_FREQ_MHZ = 100, TRAP_ADDRESS = 0) (
             ? page-fault exception occurs on an instruction fetch, load, or store, then mtval will contain the
             ? faulting virtual address.
             */
-            if(go_to_trap) begin
+            if(go_to_trap && !o_go_to_trap_q) begin
                 if(is_load_addr_misaligned || is_store_addr_misaligned) mtval <= i_alu_result;
             end           
             
@@ -588,26 +593,38 @@ module asrv32_csr #(parameter CLK_FREQ_MHZ = 100, TRAP_ADDRESS = 0) (
                 mcountinhibit_cy <= csr_in[0];
                 mcountinhibit_ir <= csr_in[2];
             end
-        end
+        // ! end // END Else if(!stall_bit) block after registering the outputs
     // ! end
 
 /* Register the Outputs */
 
     // ! always @(posedge i_clk, negedge i_rst_n) begin
-        // CSR Output
-        o_csr_out <= csr_enable? csr_data: o_csr_out; //registered output for o_csr_out        
-        // Trap Handler Outputs
-        o_go_to_trap_q <= go_to_trap;
-        o_return_from_trap_q <= return_from_trap;
-        o_return_address <= mepc;
-        /* 
-        ? Volume 2 pg. 30: When MODE=Direct (0), all traps into machine mode cause the i_pc to be set to the address in the  
-        ? BASE field. When MODE=Vectored (1), all synchronous exceptions into machine mode cause the i_pc to be set to the address 
-        ? in the BASE field, whereas interrupts cause the i_pc to be set to the address in the BASE field plus four times the
-        ? interrupt cause number 
-        */
-        if(mtvec_mode[1] && is_interrupt) o_trap_address <= {mtvec_base,2'b00} + mcause_code<<2;
-        else o_trap_address <= {mtvec_base,2'b00};    
+            if(i_ce) begin
+                // CSR Output
+                o_csr_out <= csr_data; //registered output for o_csr_out        
+                // Trap Handler Outputs
+                o_go_to_trap_q <= go_to_trap;
+                o_return_from_trap_q <= return_from_trap;
+                o_return_address <= mepc;
+                /* 
+                ? Volume 2 pg. 30: When MODE=Direct (0), all traps into machine mode cause the i_pc to be set to the address in the  
+                ? BASE field. When MODE=Vectored (1), all synchronous exceptions into machine mode cause the i_pc to be set to the address 
+                ? in the BASE field, whereas interrupts cause the i_pc to be set to the address in the BASE field plus four times the
+                ? interrupt cause number 
+                */
+                if(mtvec_mode[1] && is_interrupt) o_trap_address <= {mtvec_base,2'b00} + mcause_code<<2;
+                else o_trap_address <= {mtvec_base,2'b00};  
+            end
+            else begin
+                o_go_to_trap_q <= 0;
+                o_return_from_trap_q <= 0;
+            end
+        end
+        else begin
+            // this CSR will always be updated irrespective of pipeline state
+            mcycle <= mcountinhibit_cy? mcycle : mcycle + 1; //increments mcycle every clock cycle
+            minstret <= mcountinhibit_ir? minstret : minstret + {63'b0,(i_minstret_inc && !o_go_to_trap_q && !o_return_from_trap_q)}; //increment minstret every instruction
+        end  
     end
 
 endmodule
