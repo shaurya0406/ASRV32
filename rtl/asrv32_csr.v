@@ -160,41 +160,41 @@ module asrv32_csr #(parameter CLK_FREQ_MHZ = 100, TRAP_ADDRESS = 0) (
     reg software_interrupt_pending;
     reg timer_interrupt_pending;
 
-/* Initialise CSR Individual Register Bits */
+/* Declare CSR Individual Register Bits */
+    // ! Dont initialise the registers now, it should be done in the always block
+    reg mstatus;                // Machine Interrupt Enable
+    reg mstatus_mpie;           // Machine Previous Interrupt Enable
+    reg[1:0] mstatus_mpp = 2;   // MPP
 
-    reg mstatus_mie = 0;            // Machine Interrupt Enable
-    reg mstatus_mpie = 0;           // Machine Previous Interrupt Enable
-    reg[1:0] mstatus_mpp = 2'b11;   // MPP
+    reg mie_meie;   // Machine external interrupt enable
+    reg mie_mtie;   // Machine timer interrupt enable
+    reg mie_msie;   // Machine software interrupt enable
 
-    reg mie_meie = 0;   // Machine external interrupt enable
-    reg mie_mtie = 0;   // Machine timer interrupt enable
-    reg mie_msie = 0;   // Machine software interrupt enable
+    reg[29:0] mtvec_base;   // Address of i_pc after returning from interrupt (via MRET)
+    reg[1:0] mtvec_mode;    // Vector mode addressing 
 
-    reg[29:0] mtvec_base = TRAP_ADDRESS[31:2];  // Address of i_pc after returning from interrupt (via MRET)
-    reg[1:0] mtvec_mode = TRAP_ADDRESS[1:0];    // Vector mode addressing 
-
-    reg[31:0] mscratch = 0; // Dedicated for use by machine code
-    reg[31:0] mepc = 0;     // Machine exception i_pc (address of interrupted instruction)
+    reg[31:0] mscratch; // Dedicated for use by machine code
+    reg[31:0] mepc;     // Machine exception i_pc (address of interrupted instruction)
     
-    reg mcause_intbit = 0;      // Interrupt(1) or Exception(0)
-    reg[3:0] mcause_code = 0;   // Indicates event that caused the trap
+    reg mcause_intbit;      // Interrupt(1) or Exception(0)
+    reg[3:0] mcause_code;   // Indicates event that caused the trap
     
-    reg[31:0] mtval = 0; // Exception-specific infotmation to assist software in handling trap
+    reg[31:0] mtval; // Exception-specific infotmation to assist software in handling trap
     
-    reg mip_meip = 0; // Machine external interrupt pending
-    reg mip_mtip = 0; // Machine timer interrupt pending
-    reg mip_msip = 0; // Machine software interrupt pending
+    reg mip_meip; // Machine external interrupt pending
+    reg mip_mtip; // Machine timer interrupt pending
+    reg mip_msip; // Machine software interrupt pending
     
     // TODO: To be moved to Top SoC
-    // reg[63:0] mtime = 0;                            // Real-time i_clk (millisecond increment)
-    // reg[$clog2(MILLISEC_WRAP)-1:0] millisec = 0;    // Counter with period of 1 millisec
-    // reg[63:0] mtimecmp = 0;                         // Compare register for mtime
+    // reg[63:0] mtime;                            // Real-time i_clk (millisecond increment)
+    // reg[$clog2(MILLISEC_WRAP)-1:0] millisec;    // Counter with period of 1 millisec
+    // reg[63:0] mtimecmp;                         // Compare register for mtime
     
-    reg[63:0] mcycle = 0;   // Counts number of i_clk cycle executed by core
-    reg[63:0] minstret = 0; // Counts number instructions retired/executed by core
+    reg[63:0] mcycle;   // Counts number of i_clk cycle executed by core
+    reg[63:0] minstret; // Counts number instructions retired/executed by core
     
-    reg mcountinhibit_cy = 0; // Controls increment of mcycle
-    reg mcountinhibit_ir = 0; // Controls increment of minstret
+    reg mcountinhibit_cy; // Controls increment of mcycle
+    reg mcountinhibit_ir; // Controls increment of minstret
 
 /* Combinational Logic for load/store/instruction misaligned exception detection */
 
