@@ -14,12 +14,13 @@ module asrv32_csr #(parameter CLK_FREQ_MHZ = 100, TRAP_ADDRESS = 0) (
     input wire i_external_interrupt, // External Interrupt
     input wire i_software_interrupt, // Internal Software Interrupt
 
-    // TODO: Memory Mapped Timer 
-    // Timer Interrupt //
-    input wire i_mtime_wr_en,           // Write Enable for MTIME Register
-    input wire i_mtimecmp_wr_en,        // Write Enable for MTIMECMP Register
-    input wire[63:0] i_mtime_din,       // Data to be written to mtime
-    input wire[63:0] i_mtimecmp_din,    // Data to be written to mtimecmp
+    // TODO: Memory Mapped Timer | Moving to top SoC
+    input wire i_timer_interrupt,   // Timer Interrupt
+    // // Timer Interrupt //
+    // input wire i_mtime_wr_en,           // Write Enable for MTIME Register
+    // input wire i_mtimecmp_wr_en,        // Write Enable for MTIMECMP Register
+    // input wire[63:0] i_mtime_din,       // Data to be written to mtime
+    // input wire[63:0] i_mtimecmp_din,    // Data to be written to mtimecmp
 
     // Exceptions //
     input wire i_is_inst_illegal,   // ILLEGAL instruction
@@ -41,12 +42,18 @@ module asrv32_csr #(parameter CLK_FREQ_MHZ = 100, TRAP_ADDRESS = 0) (
     
     // Trap-Handler //
     input wire[31:0] i_pc,              // Program Counter 
+    input wire writeback_change_pc,     // High if writeback will issue change_pc (which will override this stage)
     input wire i_minstret_inc,          // Increment MINSTRET after executing an instruction
 
     output reg[31:0] o_return_address,  // MEPC CSR
     output reg[31:0] o_trap_address,    // MTVEC CSR
     output reg o_go_to_trap_q,          // High before going to trap (if exception/interrupt detected)
-    output reg o_return_from_trap_q     // High before returning from trap (via mret)
+    output reg o_return_from_trap_q,    // High before returning from trap (via mret)
+
+    // Pipeline Control //
+    input wire i_ce,    // Global clk enable for pipeline stalling of this stage
+    input wire i_stall  // Global Pipeline Stall, which informs this stage to stall
+    // * CSR operates parallel to writeback and will not separately stall the piepline hence on outputs for pipeline control.
     
 );
 
@@ -175,9 +182,10 @@ initial begin
     reg mip_mtip = 0; // Machine timer interrupt pending
     reg mip_msip = 0; // Machine software interrupt pending
     
-    reg[63:0] mtime = 0;                            // Real-time i_clk (millisecond increment)
-    reg[$clog2(MILLISEC_WRAP)-1:0] millisec = 0;    // Counter with period of 1 millisec
-    reg[63:0] mtimecmp = 0;                         // Compare register for mtime
+    // TODO: To be moved to Top SoC
+    // reg[63:0] mtime = 0;                            // Real-time i_clk (millisecond increment)
+    // reg[$clog2(MILLISEC_WRAP)-1:0] millisec = 0;    // Counter with period of 1 millisec
+    // reg[63:0] mtimecmp = 0;                         // Compare register for mtime
     
     reg[63:0] mcycle = 0;   // Counts number of i_clk cycle executed by core
     reg[63:0] minstret = 0; // Counts number instructions retired/executed by core
@@ -373,9 +381,10 @@ initial begin
             mip_meip <= 0;
             mip_msip <= 0;
             mcycle <= 0;
-            mtime <= 0;
-            millisec <= 0;
-            mtimecmp <= -1; //timer interrup will be triggered uninttentionally if reset at 0 (equal to mtime)
+            // TODO: To be moved to Top SoC
+            // mtime <= 0;
+            // millisec <= 0;
+            // mtimecmp <= -1; //timer interrup will be triggered uninttentionally if reset at 0 (equal to mtime)
             minstret <= 0;
             mcountinhibit_cy <= 0;
             mcountinhibit_ir <= 0;
@@ -525,30 +534,31 @@ initial begin
             mcycle <= mcountinhibit_cy? mcycle : mcycle + 1; //increments mcycle every clock cycle
             
             
-            // MTIME (real-time counter [millisecond increment])
-            /* 
-            ? Volume 2 pg. 44: Platforms provide a real-time counter, exposed as a memory-mapped machine-mode
-            ? read-write register, mtime. mtime must increment at constant frequency, and the platform must provide a
-            ? mechanism for determining the period of an mtime tick. 
-            */
-            if(i_mtime_wr_en) begin 
-                mtime<=i_mtime_din;
-                millisec <= 0;
-            end
-            else begin
-                millisec <= (millisec == MILLISEC_WRAP)? 0 : millisec + 1'b1;  //mod-one-millisecond counter
-                mtime <= mtime + ((millisec==MILLISEC_WRAP)? 1:0); //counter that increments every 1 millisecond
-            end
-            /* 
-            ? Volume 2 pg. 44: Platforms provide a 64-bit memory-mapped machine-mode timer compare register (mtimecmp). 
-            ? A machine timer interrupt becomes pending whenever mtime contains a value greater than or equal to mtimecmp, 
-            ? treating the values as unsigned integers. The interrupt remains posted until mtimecmp becomes greater than
-            ? mtime (typically as a result of writing mtimecmp). 
-            */
-            if(i_mtimecmp_wr_en) begin
-                mtimecmp <= i_mtimecmp_din;
-            end
-            timer_interrupt = (mtime >= mtimecmp)? 1:0;
+            // TODO: To be moved to Top SoC
+            // // MTIME (real-time counter [millisecond increment])
+            // /* 
+            // ? Volume 2 pg. 44: Platforms provide a real-time counter, exposed as a memory-mapped machine-mode
+            // ? read-write register, mtime. mtime must increment at constant frequency, and the platform must provide a
+            // ? mechanism for determining the period of an mtime tick. 
+            // */
+            // if(i_mtime_wr_en) begin 
+            //     mtime<=i_mtime_din;
+            //     millisec <= 0;
+            // end
+            // else begin
+            //     millisec <= (millisec == MILLISEC_WRAP)? 0 : millisec + 1'b1;  //mod-one-millisecond counter
+            //     mtime <= mtime + ((millisec==MILLISEC_WRAP)? 1:0); //counter that increments every 1 millisecond
+            // end
+            // /* 
+            // ? Volume 2 pg. 44: Platforms provide a 64-bit memory-mapped machine-mode timer compare register (mtimecmp). 
+            // ? A machine timer interrupt becomes pending whenever mtime contains a value greater than or equal to mtimecmp, 
+            // ? treating the values as unsigned integers. The interrupt remains posted until mtimecmp becomes greater than
+            // ? mtime (typically as a result of writing mtimecmp). 
+            // */
+            // if(i_mtimecmp_wr_en) begin
+            //     mtimecmp <= i_mtimecmp_din;
+            // end
+            // timer_interrupt = (mtime >= mtimecmp)? 1:0;
                 
                             
             // MIP (pending interrupts)       
