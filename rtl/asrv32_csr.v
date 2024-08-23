@@ -97,9 +97,10 @@ module asrv32_csr #(parameter CLK_FREQ_MHZ = 100, TRAP_ADDRESS = 0) (
                 //Machine Counter Setup
                 MCOUNTINHIBIT = 12'h320, // Machine counter-inhibit register.
 
-                // Unprivileged Counter/Timers
-                TIME     = 12'hC01, // Timer for RDTIME instruction.
-                TIMEH    = 12'hC81; // Upper 32 bits of time, RV32 only.
+                // TODO: Memory Mapped Timer | Moving to top SoC
+                // // Unprivileged Counter/Timers
+                // TIME     = 12'hC01, // Timer for RDTIME instruction.
+                // TIMEH    = 12'hC81; // Upper 32 bits of time, RV32 only.
 
 /* MCAUSE Codes */
     localparam  // Interrupt Codes
@@ -115,17 +116,19 @@ module asrv32_csr #(parameter CLK_FREQ_MHZ = 100, TRAP_ADDRESS = 0) (
                 STORE_ADDRESS_MISALIGNED        = 6,
                 ECALL                           = 11;
 
-/* Wrap value for 1 millisecond */ 
-    localparam MILLISEC_WRAP =  (CLK_FREQ_MHZ*10**6)/1000;
+// TODO: Memory Mapped Timer | Moving to top SoC
+// /* Wrap value for 1 millisecond */ 
+//     localparam MILLISEC_WRAP =  (CLK_FREQ_MHZ*10**6)/1000;
 
-// Initialise Outputs to 0 For Testbench
-initial begin
-        o_csr_out = 0;
-        o_return_address = 0;
-        o_trap_address = 0;
-        o_go_to_trap_q = 0;
-        o_return_from_trap_q = 0;
-    end
+// ! Will move this to Testbench
+// // Initialise Outputs to 0 For Testbench
+// initial begin
+//         o_csr_out = 0;
+//         o_return_address = 0;
+//         o_trap_address = 0;
+//         o_go_to_trap_q = 0;
+//         o_return_from_trap_q = 0;
+//     end
 
 /* Internal Signals and Registers to hold input values */  
 
