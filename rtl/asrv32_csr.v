@@ -243,7 +243,7 @@ module asrv32_csr #(parameter CLK_FREQ_MHZ = 100, TRAP_ADDRESS = 0) (
         return_from_trap = 0;
 
         // Assigning Updated Values
-        if(i_csr_stage_en) begin
+        if(i_ce) begin
             external_interrupt_pending =  mstatus_mie && mie_meie && (mip_meip);   // machine_interrupt_enable + machine_external_interrupt_enable + machine_external_interrupt_pending must all be high
             software_interrupt_pending = mstatus_mie && mie_msie && mip_msip;      // machine_interrupt_enable + machine_software_interrupt_enable + machine_software_interrupt_pending must all be high
             timer_interrupt_pending = mstatus_mie && mie_mtie && mip_mtip;         // machine_interrupt_enable + machine_timer_interrupt_enable + machine_timer_interrupt_pending must all be high
