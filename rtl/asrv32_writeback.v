@@ -54,5 +54,40 @@ module asrv32_writeback #(parameter PC_RESET = 32'h00_00_00_00) (
 
 
 /* Combinational Logic for Writeback Stage */
+    always @(*) begin
+        o_stall = 0; // Default: No stall unless conditions require it
+        o_flush = 0; // Default: No flush unless a PC change occurs
+        o_wr_rd_en = i_wr_rd_en && i_ce && !o_stall; // Enable write to rd if stage is enabled and not stalled
+        o_rd_addr = i_rd_addr; // Propagate rd address from input to output
+        o_rd = 0; // Default rd value
+        o_next_pc = 0; // Default: No change in PC
+        o_change_pc = 0; // Default: No PC change unless triggered
 
+        // Check for trap conditions
+        if(i_go_to_trap) begin
+            o_change_pc = 1; // Change PC if trap condition is met
+            o_next_pc = i_trap_address; // Set PC to trap address (mtvec) if interrupt/exception occurs
+            o_flush = i_ce; // Flush pipeline stages if this stage is enabled
+            o_wr_rd = 0; // Disable writing to rd in trap condition
+        end
+        
+        // Check for return from trap (mret instruction)
+        else if(i_return_from_trap) begin
+            o_change_pc = 1; // Change PC if returning from trap
+            o_next_pc = i_return_address; // Set PC to return address (mepc) if mret is triggered
+            o_flush = i_ce; // Flush pipeline stages if this stage is enabled
+            o_wr_rd_en = 0; // Disable writing to rd when returning from trap
+        end
+        
+        // Normal operation (no trap or return from trap)
+        else begin
+            if(i_opcode_load) 
+                o_rd = i_data_load; // Load data from memory to rd if LOAD instruction
+            else if(i_opcode_system && i_funct3 != 0) begin // CSR write operation
+                o_rd = i_csr_out; // Write CSR output to rd if SYSTEM instruction with funct3 non-zero
+            end
+            else 
+                o_rd = i_rd; // Default: Pass ALU-computed rd value
+        end    
+    end
 endmodule
