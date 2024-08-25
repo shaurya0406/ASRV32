@@ -7,8 +7,11 @@
 module asrv32_writeback #(parameter PC_RESET = 32'h00_00_00_00) (
     
     /* Inputs */
-    input wire i_clk, i_rst_n,
-    input wire i_writeback_en,                  // Enable o_wr_rd_en if stage is currently on WRITEBACK Stage
+    // ! No clock and reset needed as this stage runs parallel to CSR
+    // input wire i_clk, i_rst_n,
+    // ! No stage enable signal in  pipeline, added pipeline control
+    // input wire i_writeback_en,                  // Enable o_wr_rd_en if stage is currently on WRITEBACK Stage
+    
     input wire[2:0] i_funct3,                   // Function type 
     input wire[31:0] i_result_from_alu,         // Output of ALU
     input wire[31:0] i_imm,                     // Immediate value
@@ -16,16 +19,30 @@ module asrv32_writeback #(parameter PC_RESET = 32'h00_00_00_00) (
     input wire[31:0] i_load_data_from_memory,   // Data to be loaded to base register
     input wire[31:0] i_load_data_from_csr,      // CSR value to be loaded to basereg
     input wire[`OPCODE_WIDTH-1:0] i_opcode,     // Opcode
+    
     // Trap Handlers
     input wire i_go_to_trap,                    // high before going to trap (if exception/interrupt detected)
     input wire i_return_from_trap,              // high before returning from trap (via MRET)
     input wire[31:0] i_return_address,          // MEPC CSR
     input wire[31:0] i_trap_address,            // MTEVC CSR
 
-    /* Outputs */
-    output reg[31:0] o_rd,                      // Value to be written back to destination register
-    output reg[31:0] o_pc,                      // New PC value
-    output reg o_wr_rd_en                       // Write o_rd to the base register if enabled
+    /* Base RegFile Control */
+    input wire i_wr_rd_en, //write rd to basereg if enabled (from previous stage)
+    output reg o_wr_rd_en, //write rd to the base reg if enabled
+    input wire[4:0] i_rd_addr, //address for destination register (from previous stage)
+    output reg[4:0] o_rd_addr, //address for destination register
+    input wire[31:0] i_rd_data, //value to be written back to destination register (from previous stage)
+    output reg[31:0] o_rd_data, //value to be written back to destination register
+
+    /* PC Control */
+    input wire[31:0] i_pc, // pc value (from previous stage)
+    output reg[31:0] o_next_pc, //new pc value
+    output reg o_change_pc, //high if PC needs to jump
+
+    /* Pipeline Control */
+    input wire i_ce,    // Global clk enable for pipeline stalling of this stage
+    output reg o_stall, // Global stall signal, informs pipeline to stall
+    output reg o_flush  // Flush previous stages
 );
     initial o_pc = PC_RESET;                    // Initialize PC to PC_RESET
 
@@ -42,20 +59,23 @@ module asrv32_writeback #(parameter PC_RESET = 32'h00_00_00_00) (
     wire opcode_system = i_opcode[`SYSTEM];
     wire opcode_fence = i_opcode[`FENCE];
 
-/* Intermediate Registers */
-    reg[31:0] rd_d;     // Intermediate register for destination register data
-    reg[31:0] pc_d;     // Intermediate register for PC
-    reg wr_rd_d;        // Intermediate register for write enable signal
-    reg[31:0] a;        // Intermediate registers for PC calculations
-    wire[31:0] sum;     // Intermediate Signal for ALU calculations 
+// ! Shifted to ALU
+// /* Intermediate Registers */
+//     reg[31:0] rd_d;     // Intermediate register for destination register data
+//     reg[31:0] pc_d;     // Intermediate register for PC
+//     reg wr_rd_d;        // Intermediate register for write enable signal
+//     reg[31:0] a;        // Intermediate registers for PC calculations
+//     wire[31:0] sum;     // Intermediate Signal for ALU calculations 
 
 /* Combinational Logic for Writeback Stage */
 
-    assign sum = a + i_imm; // Share adder for all addition operation for less resource utilization (Non Blocking Combinational Logic)   
+    // ! Shifted to ALU
+    // assign sum = a + i_imm; // Share adder for all addition operation for less resource utilization (Non Blocking Combinational Logic)   
 
     //determine next value of PC and Rd
     always @* begin
         rd_d = 0;
+        // ! Shifted to Fetch
         pc_d = o_pc + 32'd4; // Default PC increment
         wr_rd_d = 0;
         a = o_pc;
