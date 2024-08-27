@@ -82,7 +82,7 @@ module main_memory #(parameter MEMORY_DEPTH=1024) (
     input wire i_clk, // System clock
     // Instruction Memory Interface
     input wire[$clog2(MEMORY_DEPTH)-1:0] i_inst_addr, // Instruction address
-    output wire[31:0] o_inst_out, // Instruction output
+    output reg[31:0] o_inst_out, // Instruction output
     input wire i_stb_inst, // request for instruction
     output reg o_ack_inst, //ack (high if new instruction is now on the bus)
     // Data Memory Interface
@@ -92,7 +92,7 @@ module main_memory #(parameter MEMORY_DEPTH=1024) (
     input wire i_wr_en, // Write enable
     input wire i_stb_data,
     output reg o_ack_data,
-    output wire[31:0] o_data_out // Data output
+    output reg[31:0] o_data_out // Data output
 );
     // Memory array for storing instructions and data
     reg[31:0] memory_regfile[MEMORY_DEPTH/4 - 1:0];
