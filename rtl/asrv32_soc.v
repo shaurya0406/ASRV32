@@ -7,16 +7,6 @@
 module asrv32_soc #(parameter CLK_FREQ_MHZ=12, PC_RESET=32'h00_00_00_00, TRAP_ADDRESS=32'h00_00_00_00, ZICSR_EXTENSION=1, MEMORY_DEPTH=1024) ( 
     input wire i_clk, // System clock
     input wire i_rst_n, // Active low reset
-
-    // ! Moved to VIC Module
-    // //Interrupts
-    // input wire i_external_interrupt, //interrupt from external source
-    // input wire i_software_interrupt, //interrupt from software
-    // // Timer Interrupt
-    // input wire i_mtime_wr, //write to mtime
-    // input wire i_mtimecmp_wr,  //write to mtimecmp
-    // input wire[63:0] i_mtime_din, //data to be written to mtime
-    // input wire[63:0] i_mtimecmp_din //data to be written to mtimecmp
     );
     
     // Instruction Memory Interface
@@ -78,12 +68,6 @@ module asrv32_soc #(parameter CLK_FREQ_MHZ=12, PC_RESET=32'h00_00_00_00, TRAP_AD
         .i_external_interrupt(i_external_interrupt), //interrupt from external source
         .i_software_interrupt(i_software_interrupt), //interrupt from software
         .i_timer_interrupt(o_timer_interrupt) //interrupt from timer
-
-        // ! Timer Interrupt (Moved to VIC)
-        // .i_mtime_wr(i_mtime_wr), //write to mtime
-        // .i_mtimecmp_wr(i_mtimecmp_wr),  //write to mtimecmp
-        // .i_mtime_din(i_mtime_din), //data to be written to mtime
-        // .i_mtimecmp_din(i_mtimecmp_din) //data to be written to mtimecmp
     );
 
 // Peripheral Bus Controller Instantiation
