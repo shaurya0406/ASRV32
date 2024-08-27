@@ -37,41 +37,122 @@ module asrv32_soc #(parameter CLK_FREQ_MHZ=12, PC_RESET=32'h00_00_00_00, TRAP_AD
     wire o_timer_interrupt; // interrupt from VIC
     wire o_software_interrupt; // interrupt from VIC
 
-    // Main ASRV32 core instantiation
+    // Peripheral Bus Controller
+    wire[31:0] o_device0_data_addr;
+    wire[31:0] o_device0_wdata;
+    wire[31:0] i_device0_rdata;
+    wire o_device0_wr_en;
+    wire[3:0]  o_device0_wr_mask;
+    wire o_device0_stb_data;
+    wire i_device0_ack_data;
+
+    wire[31:0] o_device1_data_addr;
+    wire[31:0] o_device1_wdata;
+    wire[31:0] i_device1_rdata;
+    wire o_device1_wr_en;
+    wire[3:0] o_device1_wr_mask;
+    wire o_device1_stb_data;
+    wire i_device1_ack_data;
+
+// Main ASRV32 core instantiation
     asrv32_core #(.PC_RESET(PC_RESET),.CLK_FREQ_MHZ(CLK_FREQ_MHZ), .TRAP_ADDRESS(TRAP_ADDRESS)) m0( 
         .i_clk(i_clk), // System clock
         .i_rst_n(i_rst_n), // Active low reset
+
         // Instruction Memory Interface
         .i_inst(inst), // 32-bit instruction
         .o_inst_addr(iaddr), // Address of instruction 
+        .o_stb_inst(i_stb_inst), // request for read access to instruction memory
+        .i_ack_inst(o_ack_inst),  // ack (high if new instruction is ready)
+
         // Data Memory Interface
         .i_data_from_memory(din), // Data retrieved from memory
         .o_store_data(dout), // Data to be stored to memory
         .o_store_data_addr(daddr), // Address of data memory for store/load
         .o_wr_mask(wr_mask), // Write mask control
         .o_wr_en(wr_en), // Write enable 
+        .o_stb_data(i_stb_data), //request for read/write access to data memory
+        .i_ack_data(o_ack_data), //ack by data memory (high when read data is ready or when write data is already written)
+
         //Interrupts
         .i_external_interrupt(i_external_interrupt), //interrupt from external source
         .i_software_interrupt(i_software_interrupt), //interrupt from software
-        // Timer Interrupt
-        .i_mtime_wr(i_mtime_wr), //write to mtime
-        .i_mtimecmp_wr(i_mtimecmp_wr),  //write to mtimecmp
-        .i_mtime_din(i_mtime_din), //data to be written to mtime
-        .i_mtimecmp_din(i_mtimecmp_din) //data to be written to mtimecmp
+        .i_timer_interrupt(o_timer_interrupt) //interrupt from timer
+
+        // ! Timer Interrupt (Moved to VIC)
+        // .i_mtime_wr(i_mtime_wr), //write to mtime
+        // .i_mtimecmp_wr(i_mtimecmp_wr),  //write to mtimecmp
+        // .i_mtime_din(i_mtime_din), //data to be written to mtime
+        // .i_mtimecmp_din(i_mtimecmp_din) //data to be written to mtimecmp
     );
-        
-    // Main memory instantiation
+
+// Peripheral Bus Controller Instantiation
+    peripheral_bus_controller controller(
+        // ARV32 Core
+        .i_data_addr(daddr),
+        .i_wdata(dout),
+        .o_rdata(din),
+        .i_wr_en(wr_en),
+        .i_wr_mask(wr_mask),
+        .i_stb_data(i_stb_data),
+        .o_ack_data(o_ack_data),
+
+        //Device 0 Interface (RAM)
+        .o_device0_data_addr(o_device0_data_addr),
+        .o_device0_wdata(o_device0_wdata),
+        .i_device0_rdata(i_device0_rdata),
+        .o_device0_wr_en(o_device0_wr_en),
+        .o_device0_wr_mask(o_device0_wr_mask),
+        .o_device0_stb_data(o_device0_stb_data),
+        .i_device0_ack_data(i_device0_ack_data),
+
+        //Device 1 Interface (CLINT)
+        .o_device1_data_addr(o_device1_data_addr),
+        .o_device1_wdata(o_device1_wdata),
+        .i_device1_rdata(i_device1_rdata),
+        .o_device1_wr_en(o_device1_wr_en),
+        .o_device1_wr_mask(o_device1_wr_mask),
+        .o_device1_stb_data(o_device1_stb_data),
+        .i_device1_ack_data(i_device1_ack_data)
+    );
+
+
+// Device 0: Main memory instantiation
     main_memory #(.MEMORY_DEPTH(MEMORY_DEPTH)) m1(
         .i_clk(i_clk), // System clock
         // Instruction Memory Interface
         .i_inst_addr(iaddr[$clog2(MEMORY_DEPTH)-1:0]), // Instruction address
         .o_inst_out(inst), // Instruction output
+        .i_stb_inst(i_stb_inst), 
+        .o_ack_inst(o_ack_inst), 
         // Data Memory Interface
-        .i_data_addr(daddr[$clog2(MEMORY_DEPTH)-1:0]), // Data address
-        .i_data_in(dout), // Data input
-        .i_wr_mask(wr_mask), // Write mask
-        .i_wr_en(wr_en), // Write enable
-        .o_data_out(din) // Data output
+        .i_data_addr(o_device0_data_addr[$clog2(MEMORY_DEPTH)-1:0]), // Data address
+        .i_data_in(o_device0_wdata), // Data input
+        .i_wr_mask(o_device0_wr_mask), // Write mask
+        .i_wr_en(o_device0_wr_en), // Write enable
+        .i_stb_data(o_device0_stb_data),
+        .o_ack_data(i_device0_ack_data),
+        .o_data_out(i_device0_rdata) // Data output
+    );
+
+// Device 1: VIC instantiation
+    asrv32_vic #( //Core Logic Interrupt [memory-mapped to < h50 (MSB=1)]
+        .CLK_FREQ_MHZ(CLK_FREQ_MHZ), //input clock frequency in MHz
+        .MTIME_BASE_ADDRESS(32'h8000_0000),  //Machine-level timer register (64-bits, 2 words)
+        .MTIMECMP_BASE_ADDRESS(32'h8000_0008), //Machine-level Time Compare register (64-bits, 2 words)
+        .MSIP_BASE_ADDRESS(32'h8000_0010) //Machine-level Software Interrupt register
+    ) vic  (
+        .clk(i_clk),
+        .rst_n(!i_rst),
+        .clint_address(o_device1_data_addr), //read/write address (access the memory-mapped registers for controlling i2c)
+        .clint_wdata(o_device1_wdata), //data to be written to slave or to memory-mapped registers of i2c
+        .clint_rdata(i_device1_rdata), //data retrieved from slave or from the memory-mapped registers of i2c
+        .clint_wr_en(o_device1_wr_en), //write-enable
+        .i_stb(o_device1_stb_data), //request to access CLINT
+        .o_ack(i_device1_ack_data), //acknowledge by CLINT
+        // Interrupts
+        .o_timer_interrupt(o_timer_interrupt),
+        .o_software_interrupt(o_software_interrupt)
     );
 
 endmodule
