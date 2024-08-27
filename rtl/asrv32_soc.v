@@ -221,3 +221,73 @@ module asrv32_vic #( // Vectored Interrupt Controller
      assign o_software_interrupt = msip;
 
 endmodule
+
+
+
+module peripheral_bus_controller ( // Decodes address and access the corresponding memory-mapped device
+    // ASRV32 Core
+    input wire[31:0] i_data_addr,
+    input wire[31:0] i_wdata,
+    output reg[31:0] o_rdata,
+    input wire i_wr_en,
+    input wire[3:0] i_wr_mask,
+    input wire i_stb_data,
+    output reg o_ack_data,
+
+    // Device 0 : RAM
+    output reg[31:0] o_device0_data_addr,
+    output reg[31:0] o_device0_wdata,
+    input wire[31:0] i_device0_rdata,
+    output reg o_device0_wr_en,
+    output reg[3:0] o_device0_wr_mask,
+    output reg o_device0_stb_data,
+    input wire i_device0_ack_data,
+
+    // Device 1: VIC
+    output reg[31:0] o_device1_data_addr,
+    output reg[31:0] o_device1_wdata,
+    input wire[31:0] i_device1_rdata,
+    output reg o_device1_wr_en,
+    output reg[3:0] o_device1_wr_mask,
+    output reg o_device1_stb_data,
+    input wire i_device1_ack_data
+)
+    always @(*) begin
+        o_rdata = 0;
+        o_ack_data = 0;
+
+        o_device0_data_addr = 0; 
+        o_device0_wdata = 0;
+        o_device0_wr_en = 0;
+        o_device0_wr_mask = 0;
+        o_device0_stb_data = 0;
+
+        o_device1_data_addr = 0; 
+        o_device1_wdata = 0;
+        o_device1_wr_en = 0;
+        o_device1_wr_mask = 0;
+        o_device1_stb_data = 0;
+
+        // Memory Mapped peripherals address have MSB set to 1
+        if(i_data_addr[31]) begin
+            if(i_data_addr[11:0] < 12'h50) begin // Device 1 Interface (VIC) (20 words)
+                o_device1_data_addr = i_data_addr; 
+                o_device1_wdata = i_wdata;
+                o_rdata = i_device1_rdata;
+                o_device1_wr_en = i_wr_en;
+                o_device1_wr_mask = i_wr_mask;
+                o_device1_stb_data = i_stb_data;
+                o_ack_data = i_device1_ack_data;
+            end
+        end
+        else begin
+            o_device0_data_addr = i_data_addr; 
+            o_device0_wdata = i_wdata;
+            o_rdata = i_device0_rdata;
+            o_device0_wr_en = i_wr_en;
+            o_device0_wr_mask = i_wr_mask;
+            o_device0_stb_data = i_stb_data;
+            o_ack_data = i_device0_ack_data;
+        end
+    end   
+endmodule
