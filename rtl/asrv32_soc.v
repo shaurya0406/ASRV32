@@ -108,10 +108,17 @@ module main_memory #(parameter MEMORY_DEPTH=1024) (
         o_inst_out <= 0;
     end
     
-    // Read instruction from memory
-    assign o_inst_out = memory_regfile[{i_inst_addr >> 2}]; 
-    // Read data from memory
-    assign o_data_out = memory_regfile[i_data_addr[$clog2(MEMORY_DEPTH)-1:2]]; 
+    //reading must be registered to be inferred as block ram
+    always @(posedge i_clk) begin 
+        // Inst Acknowledge sent in the next clock cycle
+        o_ack_inst <= i_stb_inst; 
+        // Read instruction from memory, sent out in next clock cycle
+        o_inst_out <= memory_regfile[{i_inst_addr >> 2}]; 
+        // Data Acknowledge sent in the next clock cycle
+        o_ack_data <= i_stb_data;
+        // Read data from memory, sent out in next clock cycle
+        o_data_out <= memory_regfile[i_data_addr[$clog2(MEMORY_DEPTH)-1:2]]; 
+    end
     
     // Write data to memory
     always @(posedge i_clk) begin
