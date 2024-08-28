@@ -6,12 +6,14 @@
 // Complete SoC package containing the main CPU asrv32_core and Main Memory (Combined Instruction & Data Memory)
 module asrv32_soc #(parameter CLK_FREQ_MHZ=12, PC_RESET=32'h00_00_00_00, TRAP_ADDRESS=32'h00_00_00_00, ZICSR_EXTENSION=1, MEMORY_DEPTH=1024) ( 
     input wire i_clk, // System clock
-    input wire i_rst_n, // Active low reset
+    input wire i_rst // Active low reset
     );
     
     // Instruction Memory Interface
     wire[31:0] inst; // Instruction from memory
     wire[31:0] iaddr; // Instruction address from CPU
+    wire i_stb_inst;
+    wire o_ack_inst;
     
     // Data Memory Interface
     wire[31:0] din; // Data retrieved from memory
@@ -45,9 +47,9 @@ module asrv32_soc #(parameter CLK_FREQ_MHZ=12, PC_RESET=32'h00_00_00_00, TRAP_AD
     wire i_device1_ack_data;
 
 // Main ASRV32 core instantiation
-    asrv32_core #(.PC_RESET(PC_RESET),.CLK_FREQ_MHZ(CLK_FREQ_MHZ), .TRAP_ADDRESS(TRAP_ADDRESS)) m0( 
+    asrv32_core #(.PC_RESET(PC_RESET), .TRAP_ADDRESS(TRAP_ADDRESS)) m0( 
         .i_clk(i_clk), // System clock
-        .i_rst_n(i_rst_n), // Active low reset
+        .i_rst_n(!i_rst), // Active low reset
 
         // Instruction Memory Interface
         .i_inst(inst), // 32-bit instruction
@@ -66,7 +68,7 @@ module asrv32_soc #(parameter CLK_FREQ_MHZ=12, PC_RESET=32'h00_00_00_00, TRAP_AD
 
         //Interrupts
         .i_external_interrupt(i_external_interrupt), //interrupt from external source
-        .i_software_interrupt(i_software_interrupt), //interrupt from software
+        .i_software_interrupt(o_software_interrupt), //interrupt from software
         .i_timer_interrupt(o_timer_interrupt) //interrupt from timer
     );
 
@@ -316,7 +318,7 @@ module peripheral_bus_controller ( // Decodes address and access the correspondi
     output reg[3:0] o_device1_wr_mask,
     output reg o_device1_stb_data,
     input wire i_device1_ack_data
-)
+);
     always @(*) begin
         o_rdata = 0;
         o_ack_data = 0;
