@@ -252,7 +252,7 @@ def run_tests(asrv32_path, top_module, test_type):
             if not os.path.exists(test_file):
                 print(f"Test file {test_file} is missing.")
                 countmissing += 1
-                missinglist.append(test_file)
+                missinglist += f"{os.path.basename(test_file)}\n"
                 return
 
     for test_file in test_files:
@@ -274,7 +274,7 @@ def run_tests(asrv32_path, top_module, test_type):
         obj_file = compile_source_file(asrv32_path, test_file, obj_directory)
         if not obj_file:
             countmissing += 1
-            missinglist.append(test_name)
+            missinglist += f"{os.path.basename(test_file)}\n"
             continue
 
         elf_file = f"{obj_directory}/{test_name.replace('.S', '.bin').replace('.s', '.bin').replace('.c', '.bin')}"
