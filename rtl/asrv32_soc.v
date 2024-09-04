@@ -853,3 +853,67 @@ module i2c //SCCB mode(no pullups resistors needed) [REPEATED START NOT SUPPORTE
     assign scl_lo= scl_q==1'b0 && counter_q==half[counter_width-1:0]; //scl is on the middle of a low(0) bit
 
 endmodule
+
+
+
+
+module gpio #( //UART (TX only)
+    parameter GPIO_MODE = 32'hF0, //set if GPIO will be read(0) or write(1) 
+    parameter GPIO_READ = 32'hF4, //read from GPIO
+    parameter GPIO_WRITE = 32'hF8, //write to GPIO
+    parameter GPIO_COUNT = 4
+    )(
+        input wire clk,
+        input wire rst_n,
+        input wire[31:0] gpio_rw_address, //read/write address of memory-mapped register
+        output reg[GPIO_COUNT-1:0] gpio_rdata, //read data from memory-mapped register 
+        input wire[GPIO_COUNT-1:0 ] gpio_wdata, //write data to memory-mapped register
+        input wire gpio_wr_en, //write-enable
+
+        input wire i_stb_data, //request to access UART
+        output reg o_ack_data, //acknowledge by UART
+        //GPIO
+        inout wire[11:0] gpio //gpio pins
+    );
+       
+        
+    reg[GPIO_COUNT-1:0] gpio_reg;
+    reg[GPIO_COUNT-1:0] gpio_write;
+    wire[GPIO_COUNT-1:0] gpio_read;
+    reg[GPIO_COUNT-1:0] gpio_mode;
+    always @(posedge clk,negedge rst_n) begin
+        if(!rst_n) begin
+            gpio_write <= 0;
+            gpio_mode <= 0;
+            gpio_reg <= 0;
+        end
+        else begin
+            if(i_stb_data && gpio_wr_en && gpio_rw_address == GPIO_MODE) gpio_mode <= gpio_wdata; //set mode of the gpio (write(1) or low(0))
+            if(i_stb_data && !gpio_wr_en && gpio_rw_address == GPIO_MODE) gpio_rdata <= gpio_mode; //read gpio mode
+            if(i_stb_data && gpio_wr_en && gpio_rw_address == GPIO_WRITE) gpio_write <= gpio_wdata; //write to gpio
+            if(i_stb_data && !gpio_wr_en && gpio_rw_address == GPIO_WRITE) gpio_rdata <= gpio_write; //read write value to gpio
+            if(i_stb_data && !gpio_wr_en && gpio_rw_address == GPIO_READ) gpio_rdata <= gpio_read; //read from gpio
+            
+            o_ack_data <= i_stb_data; 
+        end
+    end
+    
+    `ifndef ICARUS 
+        genvar i;
+        generate
+            for(i = 0 ; i < GPIO_COUNT ; i = i+1) begin
+                 IOBUF gpio_iobuf ( // IOBUF instantiation
+                    .IO(gpio[i]),
+                    .I(gpio_write[i]),//write to GPIO when gpio_mode is high
+                    .T(!gpio_mode[i]), 
+                    .O(gpio_read[i]) //read from GPIO when gpio_mode is low
+                 );
+            end
+         endgenerate
+     `else
+         genvar i;
+         for(i = 0 ; i < GPIO_COUNT ; i = i+1) begin
+	        assign gpio[i] = gpio_mode[i]? gpio_write[i]:1'bz; //in icarus simulation we will only write to the pin
+	     end        
+     `endif
+endmodule
