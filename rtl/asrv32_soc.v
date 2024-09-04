@@ -54,6 +54,30 @@ module asrv32_soc #(parameter CLK_FREQ_MHZ=12, PC_RESET=32'h00_00_00_00, TRAP_AD
     wire o_device1_stb_data;
     wire i_device1_ack_data;
 
+    wire[31:0] o_device2_data_addr;
+    wire[31:0] o_device2_wdata;
+    wire[31:0] i_device2_rdata;
+    wire o_device2_wr_en;
+    wire[3:0] o_device2_wr_mask;
+    wire o_device2_stb_data;
+    wire i_device2_ack_data;
+
+    wire[31:0] o_device3_data_addr;
+    wire[31:0] o_device3_wdata;
+    wire[31:0] i_device3_rdata;
+    wire o_device3_wr_en;
+    wire[3:0] o_device3_wr_mask;
+    wire o_device3_stb_data;
+    wire i_device3_ack_data;
+
+    wire[31:0] o_device4_data_addr;
+    wire[31:0] o_device4_wdata;
+    wire[31:0] i_device4_rdata;
+    wire o_device4_wr_en;
+    wire[3:0] o_device4_wr_mask;
+    wire o_device4_stb_data;
+    wire i_device4_ack_data;
+
 // Main ASRV32 core instantiation
     asrv32_core #(.PC_RESET(PC_RESET), .TRAP_ADDRESS(TRAP_ADDRESS)) m0( 
         .i_clk(i_clk), // System clock
@@ -107,7 +131,34 @@ module asrv32_soc #(parameter CLK_FREQ_MHZ=12, PC_RESET=32'h00_00_00_00, TRAP_AD
         .o_device1_wr_en(o_device1_wr_en),
         .o_device1_wr_mask(o_device1_wr_mask),
         .o_device1_stb_data(o_device1_stb_data),
-        .i_device1_ack_data(i_device1_ack_data)
+        .i_device1_ack_data(i_device1_ack_data),
+
+        //Device 2 Interface (UART)
+        .o_device2_data_addr(o_device2_data_addr),
+        .o_device2_wdata(o_device2_wdata),
+        .i_device2_rdata(i_device2_rdata),
+        .o_device2_wr_en(o_device2_wr_en),
+        .o_device2_wr_mask(o_device2_wr_mask),
+        .o_device2_stb_data(o_device2_stb_data),
+        .i_device2_ack_data(i_device2_ack_data),
+        
+        //Device 3 Interface (I2C)
+        .o_device3_data_addr(o_device3_data_addr),
+        .o_device3_wdata(o_device3_wdata),
+        .i_device3_rdata(i_device3_rdata),
+        .o_device3_wr_en(o_device3_wr_en),
+        .o_device3_wr_mask(o_device3_wr_mask),
+        .o_device3_stb_data(o_device3_stb_data),
+        .i_device3_ack_data(i_device3_ack_data),
+        
+        //Device 4 Interface (GPIO)
+        .o_device4_data_addr(o_device4_data_addr),
+        .o_device4_wdata(o_device4_wdata),
+        .i_device4_rdata(i_device4_rdata),
+        .o_device4_wr_en(o_device4_wr_en),
+        .o_device4_wr_mask(o_device4_wr_mask),
+        .o_device4_stb_data(o_device4_stb_data),
+        .i_device4_ack_data(i_device4_ack_data)
     );
 
 
@@ -325,7 +376,34 @@ module peripheral_bus_controller ( // Decodes address and access the correspondi
     output reg o_device1_wr_en,
     output reg[3:0] o_device1_wr_mask,
     output reg o_device1_stb_data,
-    input wire i_device1_ack_data
+    input wire i_device1_ack_data,
+
+    //Device 2 Interface (UART)
+    output reg[31:0] o_device2_data_addr,
+    output reg[31:0] o_device2_wdata,
+    input wire[31:0] i_device2_rdata,
+    output reg o_device2_wr_en,
+    output reg[3:0] o_device2_wr_mask,
+    output reg o_device2_stb_data,
+    input wire i_device2_ack_data,
+
+    //Device 3 Interface (I2C)
+    output reg[31:0] o_device3_data_addr,
+    output reg[31:0] o_device3_wdata,
+    input wire[31:0] i_device3_rdata,
+    output reg o_device3_wr_en,
+    output reg[3:0] o_device3_wr_mask,
+    output reg o_device3_stb_data,
+    input wire i_device3_ack_data,
+    
+    //Device 4 Interface (GPIO)
+    output reg[31:0] o_device4_data_addr,
+    output reg[31:0] o_device4_wdata,
+    input wire[31:0] i_device4_rdata,
+    output reg o_device4_wr_en,
+    output reg[3:0] o_device4_wr_mask,
+    output reg o_device4_stb_data,
+    input wire i_device4_ack_data
 );
     always @(*) begin
         o_rdata = 0;
@@ -343,6 +421,24 @@ module peripheral_bus_controller ( // Decodes address and access the correspondi
         o_device1_wr_mask = 0;
         o_device1_stb_data = 0;
 
+        o_device2_data_addr = 0; 
+        o_device2_wdata = 0;
+        o_device2_wr_en = 0;
+        o_device2_wr_mask = 0;
+        o_device2_stb_data = 0;
+
+        o_device3_data_addr = 0; 
+        o_device3_wdata = 0;
+        o_device3_wr_en = 0;
+        o_device3_wr_mask = 0;
+        o_device3_stb_data = 0;
+
+        o_device4_data_addr = 0; 
+        o_device4_wdata = 0;
+        o_device4_wr_en = 0;
+        o_device4_wr_mask = 0;
+        o_device4_stb_data = 0;
+
         // Memory Mapped peripherals address have MSB set to 1
         if(i_data_addr[31]) begin
             if(i_data_addr[11:0] < 12'h50) begin // Device 1 Interface (VIC) (20 words)
@@ -354,8 +450,37 @@ module peripheral_bus_controller ( // Decodes address and access the correspondi
                 o_device1_stb_data = i_stb_data;
                 o_ack_data = i_device1_ack_data;
             end
+            if(i_data_addr[11:0] >= 12'h50 && i_data_addr[11:0] < 12'hA0) begin //Device 2 Interface (UART) (20 words)
+                o_device2_data_addr = i_data_addr; 
+                o_device2_wdata = i_wdata;
+                o_rdata = i_device2_rdata;
+                o_device2_wr_en = i_wr_en;
+                o_device2_wr_mask = i_wr_mask;
+                o_device2_stb_data = i_stb_data;
+                o_ack_data = i_device2_ack_data;
+            end
+
+            if(i_data_addr[11:0] >= 12'hA0 && i_data_addr[11:0] < 12'hF0) begin //Device 3 Interface (I2C) (20 words)
+                o_device3_data_addr = i_data_addr; 
+                o_device3_wdata = i_wdata;
+                o_rdata = i_device3_rdata;
+                o_device3_wr_en = i_wr_en;
+                o_device3_wr_mask = i_wr_mask;
+                o_device3_stb_data = i_stb_data;
+                o_ack_data = i_device3_ack_data;
+            end
+            
+            if(i_data_addr[11:0] >= 12'hF0 && i_data_addr[11:0] < 12'h140) begin //Device 4 Interface (GPIO) (20 words)
+                o_device4_data_addr = i_data_addr; 
+                o_device4_wdata = i_wdata;
+                o_rdata = i_device4_rdata;
+                o_device4_wr_en = i_wr_en;
+                o_device4_wr_mask = i_wr_mask;
+                o_device4_stb_data = i_stb_data;
+                o_ack_data = i_device4_ack_data;
+            end
         end
-        else begin
+        else begin // Device 0 RAM Interface
             o_device0_data_addr = i_data_addr; 
             o_device0_wdata = i_wdata;
             o_rdata = i_device0_rdata;
