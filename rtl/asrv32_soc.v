@@ -199,6 +199,82 @@ module asrv32_soc #(parameter CLK_FREQ_MHZ=12, PC_RESET=32'h00_00_00_00, TRAP_AD
         .o_timer_interrupt(o_timer_interrupt),
         .o_software_interrupt(o_software_interrupt)
     );
+// DEVICE 2 : UART instantiation
+    uart #( .CLOCK_FREQ(CLK_FREQ_MHZ*1_000_000), //UART (TX only) [memory-mapped to >=h50,<hA0 (MSB=1)]
+            .BAUD_RATE( //UART Baud rate
+              `ifdef ICARUS
+               2_000_000 //faster simulation
+               `else 
+               9600 //9600 Baud
+               `endif),
+            .UART_TX_DATA(32'h8000_0050), //memory-mapped address for TX
+            .UART_TX_BUSY(32'h8000_0054), //memory-mapped address to check if TX is busy (has ongoing request)
+            .UART_RX_BUFFER_FULL(32'h8000_0058), //memory-mapped address  to check if a read has completed
+            .UART_RX_DATA(32'h8000_005C), //memory-mapped address for RX 
+            .DBIT(8), //UART Data Bits
+            .SBIT(1) //UART Stop Bits
+     ) uart
+     (
+      .clk(i_clk),
+      .rst_n(!i_rst),
+      .uart_rw_address(o_device2_data_addr), //read/write address (access the memory-mapped registers for controlling UART)
+      .uart_wdata(o_device2_wdata[7:0]), //TX data
+      .uart_wr_en(o_device2_wr_en), //write-enable
+      .uart_rx(uart_rx), //UART RX line
+      .uart_tx(uart_tx), //UART TX line
+      .uart_rdata(i_device2_rdata[7:0]), //data read from memory-mapped register 
+      .o_ack_data(i_device2_ack_data), //request to access UART
+      .i_stb_data(o_device2_stb_data) //acknowledge by UART
+      );
+
+//DEVICE 3 : I2C instantiation
+    i2c #(.main_clock(CLK_FREQ_MHZ*1_000_000), //SCCB mode(no pullups resistors needed) [memory-mapped to >=A0,<F0 (MSB=1)]
+          .freq( //i2c freqeuncy
+          `ifdef ICARUS
+           2_000_000 //faster simulation
+           `else 
+           100_000 //100KHz
+           `endif),
+          .addr_bytes(1), //addr_bytes=number of bytes of an address
+          .I2C_START(32'h8000_00A0), //write-only memory-mapped address to start i2c (write the i2c slave address)
+          .I2C_WRITE(32'h8000_00A4), //write-only memory-mapped address for sending data to slave
+          .I2C_READ(32'h8000_00A8), //read-only memory-mapped address to read data received from slave (this will also continue reading from slave) 
+          .I2C_BUSY(32'h8000_00AC), //read-only memory-mapped address to check if i2c is busy (cannot accept request)
+          .I2C_ACK(32'h8000_00B0), //read-only memory-mapped address to check if last access has benn acknowledge by slave
+          .I2C_READ_DATA_READY(32'h8000_00B4), //read-only memory-mapped address to check if data to be received from slave is ready
+          .I2C_STOP(32'h8000_00B8) //write-only memory-mapped address to stop i2c (this is persistent thus must be manually turned off after stopping i2c)
+      ) i2c
+      (
+        .clk(i_clk),
+        .rst_n(!i_rst),
+        .i2c_rw_address(o_device3_data_addr), //read/write address (access the memory-mapped registers for controlling i2c)
+        .i2c_wdata(o_device3_wdata[7:0]),  //data to be written to slave or to memory-mapped registers of i2c
+        .i2c_rdata(i_device3_rdata[7:0]),  //data retrieved from slave or from the memory-mapped registers of i2c
+        .i2c_wr_en(o_device3_wr_en), //write-enable
+        .i_stb_data(o_device3_stb_data), //request to access i2c
+        .o_ack_data(i_device3_ack_data), //acknowledge by i2c
+        .scl(i2c_scl), //i2c bidrectional clock line
+        .sda(i2c_sda) //i2c bidrectional data line
+    );
+    
+//DEVICE 4 : GPIO instantiation
+    gpio #( //General-Purpose Input-Ouput
+        .GPIO_MODE(32'h8000_00F0), //set if GPIO will be read(0) or write(1) 
+        .GPIO_READ(32'h8000_00F4), //read GPIO value
+        .GPIO_WRITE(32'h8000_00F8), //write to GPIO
+        .GPIO_COUNT(12)
+    ) gpio (
+        .clk(i_clk),
+        .rst_n(!i_rst),
+        .gpio_rw_address(o_device4_data_addr), //read/write address of memory-mapped register 
+        .gpio_wdata(o_device4_wdata[GPIO_COUNT-1:0]), //write data to memory-mapped register
+        .gpio_rdata(i_device4_rdata[GPIO_COUNT-1:0]), //read data from memory-mapped register 
+        .gpio_wr_en(o_device4_wr_en), //write-enable
+        .i_stb_data(o_device4_stb_data), //request to access GPIO
+        .o_ack_data(i_device4_ack_data), //acknowledge by GPIO
+        // GPIO
+        .gpio(gpio_pins) //gpio pins
+    );
 
 endmodule
 
